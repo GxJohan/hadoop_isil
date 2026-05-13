@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Semana 5 y 6 - Hadoop con Docker</title>
+  <style>
+    /* Variables de color para mantener un estilo consistente y fácil de editar. */
+    :root {
+      --bg: #f4fbff;
+      --primary: #00a6d6;
+      --primary-dark: #0077a3;
+      --primary-soft: #dff6ff;
+      --text: #1f2937;
+      --muted: #4b5563;
+      --card: #ffffff;
+      --border: #bfe9f5;
+      --code-bg: #0f172a;
+      --code-text: #e0f2fe;
+      --success: #0f766e;
+      --shadow: 0 18px 45px rgba(0, 119, 163, 0.12);
+      --radius-lg: 24px;
+      --radius-md: 16px;
+      --radius-sm: 12px;
+    }
+
+    /* Reset básico para evitar diferencias incómodas entre navegadores. */
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(0, 166, 214, 0.15), transparent 28%),
+        radial-gradient(circle at top right, rgba(0, 119, 163, 0.12), transparent 24%),
+        linear-gradient(180deg, #ffffff 0%, var(--bg) 28%, var(--bg) 100%);
+      font-family: "Trebuchet MS", "Segoe UI", Verdana, sans-serif;
+      line-height: 1.65;
+    }
+
+    /* El contenedor central limita el ancho para mejorar la lectura. */
+    .container {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    /* Hero: presentación del tema con información del curso. */
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 48px 0 32px;
+    }
+
+    .hero::before,
+    .hero::after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(0, 166, 214, 0.18), rgba(0, 119, 163, 0.05));
+      z-index: 0;
+    }
+
+    .hero::before {
+      width: 320px;
+      height: 320px;
+      right: -100px;
+      top: -120px;
+    }
+
+    .hero::after {
+      width: 220px;
+      height: 220px;
+      left: -80px;
+      bottom: -90px;
+    }
+
+    .hero__panel {
+      position: relative;
+      z-index: 1;
+      background: rgba(255, 255, 255, 0.86);
+      border: 1px solid rgba(191, 233, 245, 0.95);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      padding: 34px;
+      backdrop-filter: blur(10px);
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--primary-dark);
+    }
+
+    h1,
+    h2,
+    h3 {
+      font-family: Georgia, "Times New Roman", serif;
+      color: #0f3351;
+      margin-top: 0;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 4vw, 3.4rem);
+      line-height: 1.1;
+      margin-bottom: 14px;
+    }
+
+    .subtitle {
+      margin: 0;
+      max-width: 760px;
+      font-size: 1.08rem;
+      color: var(--muted);
+    }
+
+    /* Insignias rápidas para destacar los datos del curso. */
+    .hero__badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: var(--primary-soft);
+      border: 1px solid var(--border);
+      color: var(--primary-dark);
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+
+    /* Navegación rápida para saltar entre secciones. */
+    .quick-nav {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(244, 251, 255, 0.92);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid rgba(191, 233, 245, 0.85);
+    }
+
+    .quick-nav__inner {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 14px 0;
+    }
+
+    .quick-nav a {
+      text-decoration: none;
+      color: var(--primary-dark);
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 0.92rem;
+      font-weight: 700;
+      transition: transform 0.2s ease, background 0.2s ease;
+    }
+
+    .quick-nav a:hover,
+    .quick-nav a:focus-visible {
+      background: var(--primary-soft);
+      transform: translateY(-1px);
+    }
+
+    /* Espaciado general entre secciones. */
+    main {
+      padding: 28px 0 48px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 22px;
+    }
+
+    /* Tarjeta base reutilizable. */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      padding: 28px;
+    }
+
+    .section-intro {
+      margin-bottom: 16px;
+      color: var(--muted);
+    }
+
+    /* Tarjetas pequeñas para conceptos y notas. */
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .mini-card {
+      padding: 18px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, #ffffff 0%, #f8fdff 100%);
+    }
+
+    .mini-card h3 {
+      font-size: 1.2rem;
+      margin-bottom: 10px;
+    }
+
+    .accent-box {
+      border-left: 5px solid var(--primary);
+      background: var(--primary-soft);
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      color: #0d425c;
+    }
+
+    /* Estructura de dos columnas para Windows y Mac. */
+    .two-columns {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    .os-card {
+      border: 1px solid var(--border);
+      background: #fcfeff;
+      border-radius: var(--radius-md);
+      padding: 18px;
+    }
+
+    .os-card strong {
+      color: var(--primary-dark);
+    }
+
+    /* Diseño del paso a paso principal. */
+    .step-list {
+      display: grid;
+      gap: 18px;
+    }
+
+    .step {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      background: linear-gradient(180deg, #ffffff 0%, #f7fcff 100%);
+    }
+
+    .step-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #ffffff;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+
+    .step h3 {
+      margin-bottom: 10px;
+    }
+
+    /* Tarjeta especial para bloques de código con botón copiar. */
+    .code-card {
+      margin-top: 14px;
+      overflow: hidden;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(14, 165, 233, 0.18);
+    }
+
+    .code-card__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 16px;
+      background: #d9f2fb;
+      color: #073b52;
+      font-weight: 700;
+    }
+
+    .copy-btn {
+      border: none;
+      border-radius: 999px;
+      background: var(--primary-dark);
+      color: #ffffff;
+      padding: 9px 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+
+    .copy-btn:hover,
+    .copy-btn:focus-visible {
+      transform: translateY(-1px);
+      opacity: 0.94;
+    }
+
+    pre {
+      margin: 0;
+      padding: 18px;
+      overflow-x: auto;
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    code {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    }
+
+    /* Tabla de errores comunes. */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+    }
+
+    th,
+    td {
+      padding: 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    th {
+      background: var(--primary-soft);
+      color: #073b52;
+      font-family: Georgia, "Times New Roman", serif;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Caja final para reforzar la idea principal de la práctica. */
+    .closing-box {
+      background: linear-gradient(135deg, rgba(0, 166, 214, 0.12), rgba(223, 246, 255, 0.95));
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 22px;
+    }
+
+    .idea {
+      margin-top: 18px;
+      padding: 16px;
+      border-radius: var(--radius-md);
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px dashed rgba(0, 119, 163, 0.45);
+      color: #0a4b63;
+      font-weight: 700;
+    }
+
+    ul,
+    ol {
+      padding-left: 22px;
+    }
+
+    li + li {
+      margin-top: 8px;
+    }
+
+    .highlight {
+      color: var(--primary-dark);
+      font-weight: 700;
+    }
+
+    /* Toast simple para confirmar que un comando fue copiado. */
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      background: #083344;
+      color: #ecfeff;
+      padding: 12px 16px;
+      border-radius: 14px;
+      box-shadow: 0 18px 30px rgba(8, 51, 68, 0.24);
+      opacity: 0;
+      transform: translateY(12px);
+      pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Adaptación móvil para que todo siga siendo legible en pantallas pequeñas. */
+    @media (max-width: 720px) {
+      .hero {
+        padding-top: 24px;
+      }
+
+      .hero__panel,
+      .card {
+        padding: 22px;
+      }
+
+      .quick-nav__inner {
+        padding: 10px 0;
+      }
+
+      .code-card__header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      table,
+      thead,
+      tbody,
+      th,
+      td,
+      tr {
+        display: block;
+      }
+
+      thead {
+        display: none;
+      }
+
+      tr {
+        border-bottom: 1px solid var(--border);
+      }
+
+      td {
+        border-bottom: none;
+        padding-top: 8px;
+        padding-bottom: 8px;
+      }
+
+      td::before {
+        display: block;
+        margin-bottom: 6px;
+        font-weight: 700;
+        color: var(--primary-dark);
+      }
+
+      td[data-label]::before {
+        content: attr(data-label);
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Encabezado principal de la página. -->
+  <header class="hero">
+    <div class="container">
+      <div class="hero__panel">
+        <p class="eyebrow">Curso de Big Data - ISIL</p>
+        <h1>Semana 5 y 6 - Hadoop con Docker</h1>
+        <p class="subtitle">
+          Práctica guiada, básica y comprobable para entender cómo levantar Hadoop con Docker,
+          trabajar con HDFS por comandos y validar visualmente el resultado en el navegador.
+        </p>
+        <div class="hero__badges">
+          <span class="badge">Nivel: principiantes</span>
+          <span class="badge">Tema: Hadoop</span>
+          <span class="badge">Enfoque: paso a paso</span>
+          <span class="badge">Verificación: consola + navegador</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Menú de navegación rápida para saltar a cada parte importante. -->
+  <nav class="quick-nav">
+    <div class="quick-nav__inner">
+      <a href="#conceptos">Conceptos</a>
+      <a href="#requisitos">Requisitos</a>
+      <a href="#pasos">Paso a paso</a>
+      <a href="#comandos">Comandos principales</a>
+      <a href="#hdfs">Primera prueba HDFS</a>
+      <a href="#pesado">Archivo pesado</a>
+      <a href="#visual">localhost:9870</a>
+      <a href="#errores">Errores comunes</a>
+      <a href="#conclusion">Conclusión</a>
+    </div>
+  </nav>
+
+  <main class="container grid">
+    <!-- Bloque de conceptos base para estudiantes que recién empiezan. -->
+    <section id="conceptos" class="card">
+      <h2>Conceptos básicos antes de comenzar</h2>
+      <p class="section-intro">
+        Esta práctica no asume conocimientos previos. La idea es entender primero qué hace cada herramienta.
+      </p>
+      <div class="mini-grid">
+        <article class="mini-card">
+          <h3>¿Qué es Hadoop?</h3>
+          <p>
+            Hadoop es una herramienta para <span class="highlight">almacenar y procesar grandes cantidades de datos</span>.
+            En esta práctica usaremos una versión lista para aprender.
+          </p>
+        </article>
+        <article class="mini-card">
+          <h3>¿Qué es Docker?</h3>
+          <p>
+            Docker permite ejecutar programas dentro de <span class="highlight">contenedores</span>.
+            Eso evita instalar Hadoop manualmente desde cero.
+          </p>
+        </article>
+        <article class="mini-card">
+          <h3>¿Qué es HDFS?</h3>
+          <p>
+            HDFS es el sistema de archivos de Hadoop. Ahí se guardan los archivos que luego Hadoop puede usar.
+          </p>
+        </article>
+        <article class="mini-card">
+          <h3>NameNode y DataNode</h3>
+          <p>
+            El <span class="highlight">NameNode</span> organiza la información y el
+            <span class="highlight">DataNode</span> guarda los datos realmente.
+          </p>
+        </article>
+      </div>
+      <div class="accent-box" style="margin-top: 18px;">
+        Objetivo de la práctica: levantar Hadoop con Docker, crear un archivo de prueba,
+        subirlo a HDFS y comprobarlo por terminal y por navegador.
+      </div>
+    </section>
+
+    <!-- Requisitos técnicos y notas diferenciadas por sistema operativo. -->
+    <section id="requisitos" class="card">
+      <h2>Requisitos previos</h2>
+      <p class="section-intro">
+        Antes de ejecutar comandos, confirma que tienes estas herramientas instaladas y listas para usar.
+      </p>
+      <ul>
+        <li>Docker Desktop instalado.</li>
+        <li>Visual Studio Code.</li>
+        <li>Git instalado.</li>
+        <li>Terminal disponible.</li>
+      </ul>
+      <div class="two-columns">
+        <div class="os-card">
+          <strong>Windows</strong>
+          <p>
+            Puedes usar la terminal integrada de VS Code, PowerShell, Windows Terminal o Git Bash.
+            Abre Docker Desktop antes de iniciar la práctica.
+          </p>
+        </div>
+        <div class="os-card">
+          <strong>Mac</strong>
+          <p>
+            Puedes usar la terminal integrada de VS Code o la app Terminal.
+            Abre Docker Desktop y espera a que el motor esté activo.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sección central con la secuencia completa de la práctica. -->
+    <section id="pasos" class="card">
+      <h2>Paso a paso para Windows y Mac</h2>
+      <p class="section-intro">
+        Los comandos principales son los mismos en Windows y Mac. Lo más importante es estar en la carpeta correcta
+        y tener Docker Desktop abierto.
+      </p>
+      <div class="accent-box" style="margin-bottom: 18px;">
+        <strong>Advertencia importante:</strong><br>
+        Si el comando inicia con <code>docker</code>, normalmente se ejecuta desde tu computadora.<br>
+        Si el comando inicia con <code>hdfs dfs</code>, normalmente se ejecuta dentro del contenedor <code>namenode</code>.
+      </div>
+      <div class="step-list">
+        <article class="step">
+          <div class="step-number">1</div>
+          <h3>Verificar que Docker funciona</h3>
+          <p>
+            Este es el primer control. Ejecuta estos comandos en la terminal de tu computadora,
+            estando dentro de la carpeta <code>hadoop_isil</code>.
+          </p>
+          <div class="code-card">
+            <div class="code-card__header">
+              <span>Ejecutar en la terminal de tu computadora - carpeta hadoop_isil</span>
+              <button class="copy-btn" data-copy-target="code-check">Copiar</button>
+            </div>
+            <pre><code id="code-check">docker --version
+docker compose version
+docker ps</code></pre>
+          </div>
+          <p>
+            Debe aparecer una versión de Docker, una versión de Docker Compose y una tabla de contenedores.
+            Si la tabla está vacía, no es error.
+          </p>
+        </article>
+
+        <article class="step">
+          <div class="step-number">2</div>
+          <h3>Entender la estructura de carpetas</h3>
+          <p>
+            La carpeta raíz de tu trabajo se llama <code>hadoop_isil</code>. Después de descargar el repositorio
+            y preparar el CSV, la estructura esperada debe verse así:
+          </p>
+          <div class="code-card">
+            <div class="code-card__header">
+              <span>Estructura esperada</span>
+            </div>
+            <pre><code>hadoop_isil/
+├── docker-hadoop/
+├── datos_200mb.csv
+├── README.md
+├── index.html
+└── comandos-hadoop.txt</code></pre>
+          </div>
+          <p>
+            Regla simple:
+          </p>
+          <ul>
+            <li>Para levantar Hadoop, entra a <code>docker-hadoop</code>.</li>
+            <li>Para copiar el archivo CSV al contenedor, debes estar en <code>hadoop_isil</code> o usar la ruta correcta.</li>
+          </ul>
+        </article>
+
+        <article class="step">
+          <div class="step-number">3</div>
+          <h3>Descargar el repositorio</h3>
+          <p>
+            Usaremos el repositorio <span class="highlight">big-data-europe/docker-hadoop</span>
+            para tener un entorno ya preparado.
+          </p>
+          <div class="code-card">
+            <div class="code-card__header">
+              <span>Ejecutar en la terminal de tu computadora - carpeta hadoop_isil</span>
+              <button class="copy-btn" data-copy-target="code-clone">Copiar</button>
+            </div>
+            <pre><code id="code-clone">git clone https://github.com/big-data-europe/docker-hadoop.git</code></pre>
+          </div>
+        </article>
+
+        <article class="step">
+          <div class="step-number">4</div>
+          <h3>Levantar Hadoop</h3>
+          <p>
+            Este comando inicia los contenedores en segundo plano. La primera vez puede tardar varios minutos
+            porque Docker descargará imágenes. Para este paso debes entrar a la carpeta <code>docker-hadoop</code>.
+          </p>
+          <div class="code-card">
+            <div class="code-card__header">
+              <span>Ejecutar en la terminal de tu computadora - entrar a docker-hadoop</span>
+              <button class="copy-btn" data-copy-target="code-up">Copiar</button>
+            </div>
+            <pre><code id="code-up">cd docker-hadoop
+docker compose up -d</code></pre>
+          </div>
+        </article>
+
+        <article class="step">
+          <div class="step-number">5</div>
+          <h3>Confirmar que los contenedores están arriba</h3>
+          <p>
+            Busca nombres como <span class="highlight">namenode</span>, <span class="highlight">datanode</span>,
+            <span class="highlight">resourcemanager</span>, <span class="highlight">nodemanager</span> y
+            <span class="highlight">historyserver</span>. Puedes ejecutar este comando desde tu computadora
+            mientras sigues dentro de <code>docker-hadoop</code>.
+          </p>
+          <div class="code-card">
+            <div class="code-card__header">
+              <span>Ejecutar en la terminal de tu computadora - carpeta docker-hadoop</span>
+              <button class="copy-btn" data-copy-target="code-ps">Copiar</button>
+            </div>
+            <pre><code id="code-ps">docker ps</code></pre>
+          </div>
+        </article>
+
+        <article class="step">
+          <div class="step-number">6</div>
+          <h3>Abrir Hadoop en el navegador</h3>
+          <p>
+            Abre las siguientes direcciones. La más importante para esta práctica es
+            <span class="highlight">http://localhost:9870</span>.
+          </p>
+          <div class="code-card">
+            <div class="code-card__header">
+              <span>Direcciones del navegador</span>
+              <button class="copy-btn" data-copy-target="code-browser">Copiar</button>
+            </div>
+            <pre><code id="code-browser">http://localhost:9870
+http://localhost:8088</code></pre>
+          </div>
+          <ul>
+            <li><strong>localhost:9870</strong> muestra el NameNode y permite explorar HDFS.</li>
+            <li><strong>localhost:8088</strong> muestra YARN / ResourceManager.</li>
+          </ul>
+          <p>
+            Si 8088 tarda más en abrir, primero confirma 9870. La validación principal de HDFS se hace en 9870.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <!-- Resumen corto para estudiantes que quieren ver los comandos sin tanta explicación. -->
+    <section id="comandos" class="card">
+      <h2>Comandos principales</h2>
+      <p class="section-intro">
+        Este bloque resume la práctica por contexto para que no confundas comandos de computadora con comandos de Hadoop.
+      </p>
+      <div class="accent-box" style="margin-bottom: 18px;">
+        <strong>Regla rápida:</strong> si estás fuera del contenedor, usa comandos <code>docker</code>.
+        Si ya entraste a <code>namenode</code>, usa comandos <code>hdfs dfs</code>.
+      </div>
+      <div class="code-card">
+        <div class="code-card__header">
+          <span>A. Ejecutar en la terminal de tu computadora - carpeta hadoop_isil</span>
+          <button class="copy-btn" data-copy-target="code-summary-root">Copiar</button>
+        </div>
+        <pre><code id="code-summary-root">docker --version
+docker compose version
+docker ps
+git clone https://github.com/big-data-europe/docker-hadoop.git
+docker cp datos_200mb.csv namenode:/tmp/datos_200mb.csv
+docker exec -it namenode bash</code></pre>
+      </div>
+      <div class="code-card">
+        <div class="code-card__header">
+          <span>B. Ejecutar en la terminal de tu computadora - carpeta docker-hadoop</span>
+          <button class="copy-btn" data-copy-target="code-summary-dockerhadoop">Copiar</button>
+        </div>
+        <pre><code id="code-summary-dockerhadoop">cd docker-hadoop
+docker compose up -d
+docker ps
+docker cp ../datos_200mb.csv namenode:/tmp/datos_200mb.csv
+docker exec -it namenode bash
+docker compose down</code></pre>
+      </div>
+      <div class="code-card">
+        <div class="code-card__header">
+          <span>C. Ejecutar dentro del contenedor namenode</span>
+          <button class="copy-btn" data-copy-target="code-summary-container">Copiar</button>
+        </div>
+        <pre><code id="code-summary-container">echo "hadoop big data hadoop universidad datos datos hdfs" &gt; /tmp/texto.txt
+hdfs dfs -mkdir -p /input
+hdfs dfs -put -f /tmp/texto.txt /input/
+hdfs dfs -ls /input
+hdfs dfs -cat /input/texto.txt
+hdfs dfs -mkdir -p /data
+hdfs dfs -put -f /tmp/datos_200mb.csv /data/
+hdfs dfs -ls -h /data
+hdfs dfs -head /data/datos_200mb.csv
+exit</code></pre>
+      </div>
+    </section>
+
+    <!-- Prueba inicial con HDFS y un archivo de texto simple. -->
+    <section id="hdfs" class="card">
+      <h2>Primera prueba con HDFS</h2>
+      <p class="section-intro">
+        En esta parte se crea un archivo pequeño para entender el flujo completo sin complicaciones.
+        Aquí es muy importante separar lo que haces en tu computadora de lo que haces dentro del contenedor.
+      </p>
+      <div class="code-card">
+        <div class="code-card__header">
+          <span>Paso 1 - Ejecutar en la terminal de tu computadora</span>
+          <button class="copy-btn" data-copy-target="code-hdfs-host">Copiar</button>
+        </div>
+        <pre><code id="code-hdfs-host">docker exec -it namenode bash</code></pre>
+      </div>
+      <p>
+        Después de este comando, tu terminal entra al contenedor <code>namenode</code>.
+        A partir de ese momento, los siguientes comandos ya no van en tu computadora, sino dentro del contenedor.
+      </p>
+        <div class="code-card">
+          <div class="code-card__header">
+            <span>Paso 2 - Ejecutar dentro del contenedor namenode</span>
+            <button class="copy-btn" data-copy-target="code-hdfs-container">Copiar</button>
+          </div>
+        <pre><code id="code-hdfs-container">echo "hadoop big data hadoop universidad datos datos hdfs" &gt; /tmp/texto.txt
+hdfs dfs -mkdir -p /input
+hdfs dfs -put -f /tmp/texto.txt /input/
+hdfs dfs -ls /input
+hdfs dfs -cat /input/texto.txt</code></pre>
+      </div>
+      <div class="code-card">
+        <div class="code-card__header">
+          <span>Paso 3 - Salir del contenedor</span>
+          <button class="copy-btn" data-copy-target="code-hdfs-exit">Copiar</button>
+        </div>
+        <pre><code id="code-hdfs-exit">exit</code></pre>
+      </div>
+      <div class="accent-box" style="margin-top: 16px;">
+        Resultado esperado: el archivo <strong>texto.txt</strong> debe aparecer en HDFS y su contenido debe verse en pantalla con
+        <code>hdfs dfs -ls /input</code> y <code>hdfs dfs -cat /input/texto.txt</code>.
+      </div>
+    </section>
+
+    <!-- Prueba adicional para simular trabajo con un archivo más grande. -->
+    <section id="pesado" class="card">
+      <h2>Prueba con archivo pesado</h2>
+      <p class="section-intro">
+        Aquí usamos un CSV de ejemplo para entender una situación más cercana a Big Data.
+      </p>
+      <div class="accent-box">
+        El archivo fue descargado desde:
+        <br>
+        <code>https://examplefile.com/code/csv/200-mb-csv</code>
+        <br><br>
+        Importante: el nombre descargado puede variar. Para esta guía usaremos el nombre
+        <strong>datos_200mb.csv</strong>.
+      </div>
+      <p><strong>Flujo de la práctica:</strong> Archivo en mi computadora -&gt; Contenedor Docker -&gt; HDFS -&gt; Visualización en localhost:9870</p>
+      <div class="code-card">
+        <div class="code-card__header">
+          <span>Paso 1 - Verificar el nombre del archivo descargado</span>
+          <button class="copy-btn" data-copy-target="code-heavy-check">Copiar</button>
+        </div>
+        <pre><code id="code-heavy-check"># Mac / Linux
+ls -lh
+
+# Windows PowerShell
+dir</code></pre>
+      </div>
+      <p>
+        Si el archivo no se llama <code>datos_200mb.csv</code>, puedes renombrarlo para que los comandos de la práctica
+        coincidan exactamente con la guía.
+      </p>
+      <div class="code-card">
+        <div class="code-card__header">
+          <span>Paso 2 - Renombrar el archivo si tiene otro nombre</span>
+          <button class="copy-btn" data-copy-target="code-heavy-rename">Copiar</button>
+        </div>
+        <pre><code id="code-heavy-rename"># Mac / Linux
+mv nombre_original.csv datos_200mb.csv
+
+# Windows PowerShell
+ren nombre_original.csv datos_200mb.csv</code></pre>
+      </div>
+      <p>
+        Ahora decide desde qué carpeta estás trabajando:
+      </p>
+      <ul>
+        <li>Si estás en <code>hadoop_isil</code>, usa el archivo como <code>datos_200mb.csv</code>.</li>
+        <li>Si estás dentro de <code>docker-hadoop</code>, usa la ruta <code>../datos_200mb.csv</code>.</li>
+      </ul>
+      <div class="code-card">
+        <div class="code-card__header">
+          <span>Paso 3A - Ejecutar en la terminal de tu computadora - carpeta hadoop_isil</span>
+          <button class="copy-btn" data-copy-target="code-heavy-root">Copiar</button>
+        </div>
+        <pre><code id="code-heavy-root">docker cp datos_200mb.csv namenode:/tmp/datos_200mb.csv
+docker exec -it namenode bash
+</code></pre>
+      </div>
+      <div class="code-card">
+        <div class="code-card__header">
+          <span>Paso 3B - Ejecutar en la terminal de tu computadora - carpeta docker-hadoop</span>
+          <button class="copy-btn" data-copy-target="code-heavy-subfolder">Copiar</button>
+        </div>
+        <pre><code id="code-heavy-subfolder">docker cp ../datos_200mb.csv namenode:/tmp/datos_200mb.csv
+docker exec -it namenode bash</code></pre>
+      </div>
+      <p>
+        Después de entrar con <code>docker exec -it namenode bash</code>, ya estás dentro del contenedor.
+      </p>
+      <div class="code-card">
+        <div class="code-card__header">
+          <span>Paso 4 - Ejecutar dentro del contenedor namenode</span>
+          <button class="copy-btn" data-copy-target="code-heavy-container">Copiar</button>
+        </div>
+        <pre><code id="code-heavy-container">hdfs dfs -mkdir -p /data
+hdfs dfs -put -f /tmp/datos_200mb.csv /data/
+hdfs dfs -ls -h /data
+hdfs dfs -head /data/datos_200mb.csv</code></pre>
+      </div>
+      <div class="code-card">
+        <div class="code-card__header">
+          <span>Paso 5 - Salir del contenedor</span>
+          <button class="copy-btn" data-copy-target="code-heavy-exit">Copiar</button>
+        </div>
+        <pre><code id="code-heavy-exit">exit</code></pre>
+      </div>
+      <p>
+        Resultado esperado: después de subirlo, debes poder ver <code>datos_200mb.csv</code> dentro de <code>/data</code>
+        por consola y también desde <code>http://localhost:9870</code>.
+      </p>
+    </section>
+
+    <!-- Explicación visual de lo que debe aparecer en la interfaz web del NameNode. -->
+    <section id="visual" class="card">
+      <h2>Qué debo ver en localhost:9870</h2>
+      <p class="section-intro">
+        La interfaz web ayuda a comprobar visualmente que HDFS está funcionando.
+      </p>
+      <ol>
+        <li>Abrir <code>http://localhost:9870</code>.</li>
+        <li>Buscar <strong>Utilities -&gt; Browse the file system</strong>.</li>
+        <li>Escribir <code>/input</code> para ver el archivo <strong>texto.txt</strong>.</li>
+        <li>Escribir <code>/data</code> para ver el archivo <strong>datos_200mb.csv</strong>.</li>
+      </ol>
+      <p>
+        Si alguno de los archivos no aparece en el navegador, primero confírmalo por consola dentro del contenedor <code>namenode</code>.
+      </p>
+      <div class="code-card">
+        <div class="code-card__header">
+          <span>Verificación por consola dentro del contenedor namenode</span>
+          <button class="copy-btn" data-copy-target="code-visual-check">Copiar</button>
+        </div>
+        <pre><code id="code-visual-check">hdfs dfs -ls /input
+hdfs dfs -ls -h /data</code></pre>
+      </div>
+    </section>
+
+    <!-- Tabla simple con problemas frecuentes y su salida rápida. -->
+    <section id="errores" class="card">
+      <h2>Errores comunes</h2>
+      <p class="section-intro">
+        Estos son los problemas más habituales cuando recién se empieza.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Problema</th>
+            <th>Qué hacer</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td data-label="Problema">Docker no abre.</td>
+            <td data-label="Qué hacer">Abre Docker Desktop otra vez y espera a que quede operativo.</td>
+          </tr>
+          <tr>
+            <td data-label="Problema">Puerto 9870 no carga.</td>
+            <td data-label="Qué hacer">Revisa <code>docker ps</code>, espera un poco y confirma que <code>namenode</code> está corriendo.</td>
+          </tr>
+          <tr>
+            <td data-label="Problema"><code>docker compose</code> no existe.</td>
+            <td data-label="Qué hacer">Actualiza Docker Desktop. En versiones antiguas puede existir <code>docker-compose</code>.</td>
+          </tr>
+          <tr>
+            <td data-label="Problema">El contenedor <code>namenode</code> no aparece.</td>
+            <td data-label="Qué hacer">Asegúrate de estar dentro de la carpeta <code>docker-hadoop</code> y repite <code>docker compose up -d</code>.</td>
+          </tr>
+          <tr>
+            <td data-label="Problema">El archivo no se ve en HDFS.</td>
+            <td data-label="Qué hacer">Confirma con <code>hdfs dfs -ls /input</code> o <code>hdfs dfs -ls /data</code> y actualiza el navegador.</td>
+          </tr>
+          <tr>
+            <td data-label="Problema">En Windows el comando no funciona por estar en otra carpeta.</td>
+            <td data-label="Qué hacer">Usa <code>cd</code> para entrar a la carpeta correcta. Puedes confirmar con <code>dir</code> o <code>ls</code>.</td>
+          </tr>
+          <tr>
+            <td data-label="Problema">Estoy dentro del contenedor y escribo <code>docker ps</code>, pero no funciona.</td>
+            <td data-label="Qué hacer">Sal con <code>exit</code> y ejecuta <code>docker ps</code> desde la computadora.</td>
+          </tr>
+          <tr>
+            <td data-label="Problema">Estoy en <code>docker-hadoop</code> y no encuentra <code>datos_200mb.csv</code>.</td>
+            <td data-label="Qué hacer">Usa <code>../datos_200mb.csv</code> o vuelve a la carpeta raíz <code>hadoop_isil</code>.</td>
+          </tr>
+          <tr>
+            <td data-label="Problema">El archivo descargado no se llama <code>datos_200mb.csv</code>.</td>
+            <td data-label="Qué hacer">Verifica el nombre con <code>dir</code> o <code>ls -lh</code> y luego renómbralo.</td>
+          </tr>
+          <tr>
+            <td data-label="Problema">El navegador 9870 abre, pero no veo el archivo.</td>
+            <td data-label="Qué hacer">Confirma primero que el archivo sí se subió a HDFS con <code>hdfs dfs -ls /input</code> o <code>hdfs dfs -ls -h /data</code>.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Cierre pedagógico de la sesión. -->
+    <section id="conclusion" class="closing-box">
+      <h2>Conclusión sencilla</h2>
+      <p>
+        En esta práctica aprendiste que Hadoop puede probarse sin instalación manual compleja gracias a Docker.
+        También viste que HDFS se maneja principalmente por comandos, pero se puede comprobar visualmente en el navegador.
+      </p>
+      <div class="idea">
+        Idea principal de la práctica:<br>
+        Hadoop se trabaja principalmente por comandos, pero localhost:9870 permite comprobar visualmente que HDFS está funcionando.
+      </div>
+    </section>
+  </main>
+
+  <!-- Elemento visual temporal que aparece al copiar un bloque de código. -->
+  <div id="toast" class="toast" role="status" aria-live="polite">Comando copiado</div>
+
+  <script>
+    /*
+      Este bloque JavaScript agrega los botones "Copiar".
+      Se mantiene simple para que sea fácil de modificar por el docente.
+    */
+    const copyButtons = document.querySelectorAll('.copy-btn');
+    const toast = document.getElementById('toast');
+
+    /*
+      Función pequeña para mostrar un mensaje breve al usuario.
+      Se usa cada vez que un bloque de código se copia correctamente.
+    */
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add('show');
+      window.clearTimeout(showToast.timeoutId);
+      showToast.timeoutId = window.setTimeout(() => {
+        toast.classList.remove('show');
+      }, 1800);
+    }
+
+    /*
+      Copiado con fallback:
+      1. Primero intenta usar navigator.clipboard.
+      2. Si el navegador no lo permite, usa un textarea temporal.
+    */
+    async function copyText(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch (error) {
+        const helper = document.createElement('textarea');
+        helper.value = text;
+        helper.setAttribute('readonly', '');
+        helper.style.position = 'absolute';
+        helper.style.left = '-9999px';
+        document.body.appendChild(helper);
+        helper.select();
+        const result = document.execCommand('copy');
+        document.body.removeChild(helper);
+        return result;
+      }
+    }
+
+    /*
+      Asocia cada botón con el bloque de código indicado en data-copy-target.
+      Así es fácil agregar más botones en el futuro.
+    */
+    copyButtons.forEach((button) => {
+      button.addEventListener('click', async () => {
+        const targetId = button.getAttribute('data-copy-target');
+        const codeBlock = document.getElementById(targetId);
+        const text = codeBlock.textContent.trim();
+        const copied = await copyText(text);
+        showToast(copied ? 'Comando copiado' : 'No se pudo copiar');
+      });
+    });
+  </script>
+</body>
+</html>
