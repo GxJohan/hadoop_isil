@@ -1,6 +1,10 @@
 SEMANA 5 Y 6 - HADOOP CON DOCKER
 ISIL - CURSO DE BIG DATA
 
+REPOSITORIO BASE DEL CURSO
+
+https://github.com/GxJohan/hadoop_isil
+
 ESTRUCTURA ESPERADA
 
 hadoop_isil/
@@ -15,37 +19,30 @@ REGLA IMPORTANTE
 Si el comando inicia con docker, normalmente se ejecuta desde tu computadora.
 Si el comando inicia con hdfs dfs, normalmente se ejecuta dentro del contenedor namenode.
 
-A. DESDE TU COMPUTADORA - VERIFICAR DOCKER
+A. DESDE TU COMPUTADORA - CLONAR REPOSITORIO BASE Y ABRIR VS CODE
+
+git clone https://github.com/GxJohan/hadoop_isil.git
+cd hadoop_isil
+code .
+
+B. DESDE TU COMPUTADORA - VERIFICAR DOCKER
 
 docker --version
 docker compose version
 docker ps
 
-B. DESDE TU COMPUTADORA - DESCARGAR REPOSITORIO
+C. DESDE TU COMPUTADORA - DESCARGAR EL ENTORNO HADOOP
 
 git clone https://github.com/big-data-europe/docker-hadoop.git
 cd docker-hadoop
 
-C. DESDE TU COMPUTADORA - LEVANTAR HADOOP
+D. DESDE TU COMPUTADORA - LEVANTAR HADOOP
 Estando dentro de hadoop_isil/docker-hadoop:
 
 docker compose up -d
 docker ps
 
-D. DESDE TU COMPUTADORA - ENTRAR AL CONTENEDOR NAMENODE
-
-docker exec -it namenode bash
-
-E. DENTRO DEL CONTENEDOR NAMENODE - PRIMERA PRUEBA HDFS
-
-echo "hadoop big data hadoop universidad datos datos hdfs" > /tmp/texto.txt
-hdfs dfs -mkdir -p /input
-hdfs dfs -put -f /tmp/texto.txt /input/
-hdfs dfs -ls /input
-hdfs dfs -cat /input/texto.txt
-exit
-
-F. DESDE TU COMPUTADORA - VERIFICAR NOMBRE DEL CSV PESADO
+E. DESDE TU COMPUTADORA - VERIFICAR NOMBRE DEL CSV PESADO
 
 Archivo descargado desde:
 https://examplefile.com/code/csv/200-mb-csv
@@ -68,21 +65,19 @@ Windows PowerShell:
 
 ren nombre_original.csv datos_200mb.csv
 
-G. DESDE TU COMPUTADORA - COPIAR CSV PESADO AL CONTENEDOR
+F. DESDE TU COMPUTADORA - COPIAR CSV PESADO AL CONTENEDOR
 
 Si estas en hadoop_isil:
 
 docker cp datos_200mb.csv namenode:/tmp/datos_200mb.csv
+docker exec -it namenode bash
 
 Si estas dentro de docker-hadoop:
 
 docker cp ../datos_200mb.csv namenode:/tmp/datos_200mb.csv
-
-Luego entrar:
-
 docker exec -it namenode bash
 
-H. DENTRO DEL CONTENEDOR NAMENODE - SUBIR CSV PESADO A HDFS
+G. DENTRO DEL CONTENEDOR NAMENODE - SUBIR CSV PESADO A HDFS
 
 hdfs dfs -mkdir -p /data
 hdfs dfs -put -f /tmp/datos_200mb.csv /data/
@@ -90,7 +85,7 @@ hdfs dfs -ls -h /data
 hdfs dfs -head /data/datos_200mb.csv
 exit
 
-I. VERIFICACION EN EL NAVEGADOR
+H. VERIFICACION EN EL NAVEGADOR
 
 Abrir:
 
@@ -102,15 +97,18 @@ Utilities -> Browse the file system
 
 Revisar:
 
-/input
 /data
 
 Tambien puedes abrir:
 
 http://localhost:8088
 
-J. DESDE TU COMPUTADORA - APAGAR HADOOP
+I. DESDE TU COMPUTADORA - APAGAR HADOOP
 
-Estando dentro de hadoop_isil/docker-hadoop:
+Si aun estas dentro del contenedor:
+
+exit
+
+Luego, estando dentro de hadoop_isil/docker-hadoop:
 
 docker compose down

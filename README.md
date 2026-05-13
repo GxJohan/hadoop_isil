@@ -1,9 +1,9 @@
-# Semana 5 y 6 - Introducción a Hadoop con Docker
+# Semana 5 y 6 - Hadoop con Docker
 
-Guía práctica básica para estudiantes de ISIL en el curso de Big Data.
+Guia practica para trabajar Hadoop con Docker desde Visual Studio Code usando una carpeta base llamada `hadoop_isil`.
 
-Objetivo de esta práctica:
-aprender a levantar un entorno simple de Hadoop con Docker, crear un archivo de prueba, subirlo a HDFS y comprobar que todo funciona tanto por consola como desde el navegador.
+Objetivo de esta practica:
+preparar el entorno, abrir el proyecto en Visual Studio Code, levantar Hadoop con Docker, cargar `datos_200mb.csv` a HDFS y comprobar el resultado en `http://localhost:9870`.
 
 ## Estructura esperada del proyecto
 
@@ -16,51 +16,71 @@ hadoop_isil/
 └── comandos-hadoop.txt
 ```
 
-Explicación sencilla:
+Explicacion corta:
 
 - `docker-hadoop/` contiene el entorno Hadoop descargado desde GitHub.
-- `datos_200mb.csv` es el archivo de prueba pesado.
-- `README.md` contiene la guía paso a paso.
-- `index.html` contiene la versión visual de la práctica.
-- `comandos-hadoop.txt` contiene los comandos resumidos.
+- `datos_200mb.csv` es el archivo pesado de prueba.
+- `README.md` contiene la guia paso a paso.
+- `index.html` contiene la version visual de la practica.
+- `comandos-hadoop.txt` contiene el resumen rapido de comandos.
 
-## A. Introducción sencilla
-
-Hadoop es una herramienta pensada para almacenar y procesar grandes cantidades de datos.
+## A. Conceptos base
 
 - Hadoop sirve para almacenar y procesar grandes cantidades de datos.
 - HDFS es el sistema de archivos de Hadoop.
-- NameNode es quien organiza la información.
-- DataNode es donde se guardan los datos.
+- NameNode organiza la informacion.
+- DataNode guarda los datos.
 - Docker permite usar Hadoop sin instalarlo manualmente.
 
-Idea simple:
-en lugar de instalar Hadoop archivo por archivo, Docker descarga contenedores ya preparados para que podamos practicar más rápido.
+## B. Instalacion previa
 
-## B. Requisitos previos
+Antes de comenzar, instala estas herramientas:
 
-Antes de comenzar, cada estudiante debe tener:
+- Docker Desktop
+- Visual Studio Code
+- Git
+- Terminal disponible
 
-- Docker Desktop instalado.
-- Visual Studio Code.
-- Git instalado.
-- Terminal disponible.
+### Windows
 
-Notas por sistema operativo:
+1. Instala Visual Studio Code desde [code.visualstudio.com](https://code.visualstudio.com/).
+2. Instala Git desde [git-scm.com/download/win](https://git-scm.com/download/win).
+3. Usa la terminal integrada de VS Code, PowerShell o Git Bash.
+4. Abre Docker Desktop antes de iniciar la practica.
 
-- Windows: se recomienda usar la terminal integrada de VS Code, PowerShell o Git Bash.
-- Mac: se recomienda usar la terminal integrada de VS Code o la app Terminal.
+### Mac
 
-Consejo importante:
-antes de usar los comandos, abre Docker Desktop y espera a que indique que el motor de Docker está corriendo.
+1. Instala Visual Studio Code desde [code.visualstudio.com](https://code.visualstudio.com/).
+2. Instala Git desde [git-scm.com/download/mac](https://git-scm.com/download/mac) o verifica si ya existe con `git --version`.
+3. Usa la terminal integrada de VS Code o la app Terminal.
+4. Abre Docker Desktop y espera a que el motor este activo.
 
 ## C. Regla importante
 
-> Regla importante:
 > Si el comando inicia con `docker`, normalmente se ejecuta desde tu computadora.
+>
 > Si el comando inicia con `hdfs dfs`, normalmente se ejecuta dentro del contenedor `namenode`.
 
-## D. Verificar que Docker funciona
+## D. Repositorio base y Visual Studio Code
+
+Repositorio base del curso:
+[https://github.com/GxJohan/hadoop_isil](https://github.com/GxJohan/hadoop_isil)
+
+### Ejecutar desde tu computadora
+
+```bash
+git clone https://github.com/GxJohan/hadoop_isil.git
+cd hadoop_isil
+code .
+```
+
+Si `code .` no funciona:
+
+- abre Visual Studio Code manualmente
+- usa `File -> Open Folder`
+- selecciona la carpeta `hadoop_isil`
+
+## E. Verificar que Docker funciona
 
 ### Ejecutar desde la carpeta raiz `hadoop_isil`
 
@@ -72,18 +92,13 @@ docker ps
 
 Que deberia aparecer:
 
-- En `docker --version` debe aparecer una version de Docker.
-- En `docker compose version` debe aparecer una version de Docker Compose.
-- En `docker ps` debe aparecer una tabla.
-- Si la tabla sale vacia, no hay problema: solo significa que todavia no hay contenedores en ejecucion.
+- una version de Docker
+- una version de Docker Compose
+- una tabla de contenedores
 
-Si aparece un error como "cannot connect to the Docker daemon":
+Si la tabla sale vacia, no hay problema. Solo significa que todavia no hay contenedores en ejecucion.
 
-- Revisa que Docker Desktop este abierto.
-- Espera unos segundos.
-- Ejecuta otra vez `docker ps`.
-
-## E. Descargar el repositorio de Hadoop con Docker
+## F. Descargar el entorno Hadoop dentro de la carpeta base
 
 ### Ejecutar desde la carpeta raiz `hadoop_isil`
 
@@ -92,14 +107,9 @@ git clone https://github.com/big-data-europe/docker-hadoop.git
 cd docker-hadoop
 ```
 
-Que hace cada comando:
+## G. Levantar Hadoop
 
-- `git clone ...` descarga el repositorio del ejemplo de Hadoop con Docker.
-- `cd docker-hadoop` entra a la carpeta del proyecto descargado.
-
-## F. Levantar Hadoop
-
-Debes ejecutar este paso estando dentro de:
+Este paso debe ejecutarse estando dentro de:
 
 ```text
 hadoop_isil/docker-hadoop
@@ -109,147 +119,95 @@ hadoop_isil/docker-hadoop
 
 ```bash
 docker compose up -d
-```
-
-Explicacion basica:
-
-- Docker descargara imagenes si es la primera vez.
-- Luego levantara los contenedores en segundo plano.
-- Este paso puede tardar algunos minutos en la primera ejecucion.
-
-## G. Verificar contenedores
-
-### Ejecutar desde tu computadora
-
-Puedes seguir dentro de la carpeta `docker-hadoop` y ejecutar:
-
-```bash
 docker ps
 ```
 
-Deberian aparecer contenedores como:
+Que debes comprobar:
 
-- `namenode`
-- `datanode`
-- `resourcemanager`
-- `nodemanager`
-- `historyserver`
-
-Si alguno tarda en aparecer, espera un poco y vuelve a ejecutar `docker ps`.
+- deben aparecer contenedores como `namenode`, `datanode`, `resourcemanager`, `nodemanager` e `historyserver`
+- si tardan en aparecer, espera unos segundos y vuelve a ejecutar `docker ps`
 
 ## H. Abrir Hadoop en el navegador
-
-### Ejecutar desde tu navegador
 
 Abre estas direcciones:
 
 - `http://localhost:9870`
 - `http://localhost:8088`
 
-Explicacion basica:
+Explicacion corta:
 
-- `localhost:9870` permite ver el NameNode y explorar HDFS.
-- `localhost:8088` permite ver YARN / ResourceManager.
+- `localhost:9870` muestra el NameNode y permite explorar HDFS
+- `localhost:8088` muestra YARN / ResourceManager
 
-Nota importante:
-la comprobacion principal de esta practica es `http://localhost:9870`, porque ahi veremos HDFS.
+La comprobacion principal de esta practica se hace en `http://localhost:9870`.
 
-## I. Primera prueba en HDFS
+## I. Prueba con archivo pesado
 
-### Ejecutar desde tu computadora
-
-```bash
-docker exec -it namenode bash
-```
-
-Despues de este comando, la terminal entra al contenedor `namenode`.
-
-### Ejecutar dentro del contenedor namenode
-
-```bash
-echo "hadoop big data hadoop universidad datos datos hdfs" > /tmp/texto.txt
-hdfs dfs -mkdir -p /input
-hdfs dfs -put -f /tmp/texto.txt /input/
-hdfs dfs -ls /input
-hdfs dfs -cat /input/texto.txt
-```
-
-Que deberias comprobar:
-
-- La carpeta `/input` debe existir en HDFS.
-- El archivo `texto.txt` debe aparecer en el listado.
-- El comando `cat` debe mostrar el texto guardado.
-
-### Para salir del contenedor
-
-```bash
-exit
-```
-
-## J. Prueba con archivo pesado
-
-El archivo CSV de prueba fue descargado desde:
-
-`https://examplefile.com/code/csv/200-mb-csv`
+El archivo fue descargado desde:
+[https://examplefile.com/code/csv/200-mb-csv](https://examplefile.com/code/csv/200-mb-csv)
 
 Importante:
-el nombre real del archivo descargado puede variar. Para esta guia trabajaremos con el nombre:
+el nombre real del archivo descargado puede variar. Para esta guia se usara el nombre:
 
 ```text
 datos_200mb.csv
 ```
 
-Lo ideal es que el archivo quede en esta ruta:
+La ubicacion recomendada es:
 
 ```text
 hadoop_isil/datos_200mb.csv
 ```
 
-### Ejecutar desde la carpeta raiz `hadoop_isil` - verificar el nombre real del archivo
+### Paso 1 - Verificar el nombre real del archivo
 
-Mac / Linux:
+#### Mac / Linux
 
 ```bash
 ls -lh
 ```
 
-Windows PowerShell:
+#### Windows PowerShell
 
 ```powershell
 dir
 ```
 
-### Si el archivo tiene otro nombre, renombrarlo
+### Paso 2 - Renombrar el archivo si tiene otro nombre
 
-Mac / Linux:
+#### Mac / Linux
 
 ```bash
 mv nombre_original.csv datos_200mb.csv
 ```
 
-Windows PowerShell:
+#### Windows PowerShell
 
 ```powershell
 ren nombre_original.csv datos_200mb.csv
 ```
 
-### Opcion A: ejecutar desde la carpeta raiz `hadoop_isil`
+### Paso 3A - Copiar el CSV al contenedor desde `hadoop_isil`
+
+### Ejecutar desde tu computadora
 
 ```bash
 docker cp datos_200mb.csv namenode:/tmp/datos_200mb.csv
+docker exec -it namenode bash
 ```
 
-### Opcion B: ejecutar desde la carpeta `docker-hadoop`
+### Paso 3B - Copiar el CSV al contenedor desde `docker-hadoop`
+
+### Ejecutar desde tu computadora
 
 ```bash
 docker cp ../datos_200mb.csv namenode:/tmp/datos_200mb.csv
-```
-
-### Luego ejecutar desde tu computadora
-
-```bash
 docker exec -it namenode bash
 ```
+
+Despues de `docker exec -it namenode bash`, tu terminal entra al contenedor `namenode`.
+
+### Paso 4 - Subir el archivo a HDFS
 
 ### Ejecutar dentro del contenedor namenode
 
@@ -262,98 +220,63 @@ hdfs dfs -head /data/datos_200mb.csv
 
 Resultado esperado:
 
-- El archivo debe aparecer dentro de `/data`.
-- `hdfs dfs -ls -h /data` debe mostrar el nombre del archivo y su tamano.
-- `hdfs dfs -head /data/datos_200mb.csv` debe mostrar las primeras lineas del archivo.
+- `hdfs dfs -ls -h /data` debe mostrar `datos_200mb.csv`
+- `hdfs dfs -head /data/datos_200mb.csv` debe mostrar las primeras lineas del archivo
 
-### Para salir del contenedor
+### Paso 5 - Salir del contenedor
+
+### Ejecutar dentro del contenedor namenode
 
 ```bash
 exit
 ```
 
-## K. Verificacion visual en localhost:9870
+## J. Verificacion visual en localhost:9870
 
-### Abrir en el navegador
+1. Abrir `http://localhost:9870`
+2. Buscar `Utilities -> Browse the file system`
+3. Escribir `/data`
+4. Verificar que aparezca `datos_200mb.csv`
 
-`http://localhost:9870`
+Si no aparece, comprobar primero por consola:
 
-### Buscar en la interfaz
-
-`Utilities -> Browse the file system`
-
-### Revisar la ruta
-
-```text
-/input
-```
-
-Para ver:
-
-```text
-texto.txt
-```
-
-### Revisar tambien la ruta
-
-```text
-/data
-```
-
-Para ver:
-
-```text
-datos_200mb.csv
-```
-
-Si no aparece en el navegador, verificar por consola dentro del contenedor:
+### Ejecutar dentro del contenedor namenode
 
 ```bash
-hdfs dfs -ls /input
 hdfs dfs -ls -h /data
 ```
 
-## L. Apagar Hadoop
+## K. Apagar Hadoop
 
-### Primero salir del contenedor si estas dentro
+Si todavia estas dentro del contenedor:
+
+### Ejecutar dentro del contenedor namenode
 
 ```bash
 exit
 ```
 
-### Luego entrar a la carpeta `docker-hadoop` si no estas ahi
+Luego vuelve a `docker-hadoop` si hace falta.
 
-```bash
-cd docker-hadoop
-```
-
-### Finalmente ejecutar desde tu computadora
+### Ejecutar desde tu computadora - carpeta `docker-hadoop`
 
 ```bash
 docker compose down
 ```
 
-Explicacion:
-
-- Este comando apaga y elimina los contenedores de la practica.
-- Los datos temporales de la sesion pueden desaparecer si no estan montados en volumenes.
-
-## M. Problemas comunes
+## L. Problemas comunes
 
 | Problema | Solucion sencilla |
 | --- | --- |
-| Docker no abre. | Cierra y vuelve a abrir Docker Desktop. Espera hasta que indique que esta funcionando. |
-| Puerto 9870 no carga. | Revisa `docker ps`, espera un poco mas y confirma que el contenedor `namenode` esta arriba. |
-| `docker compose` no existe. | Actualiza Docker Desktop. En algunos equipos antiguos puede funcionar `docker-compose`, pero en esta guia usaremos `docker compose`. |
-| El contenedor `namenode` no aparece. | Asegurate de estar dentro de la carpeta `docker-hadoop` y vuelve a ejecutar `docker compose up -d`. |
-| El archivo no se ve en HDFS. | Comprueba con `hdfs dfs -ls /input` o `hdfs dfs -ls -h /data` y luego actualiza el navegador en `localhost:9870`. |
-| En Windows el comando no funciona por estar en otra carpeta. | Usa `cd` para entrar a la carpeta correcta. Puedes confirmar con `dir` en PowerShell o `ls` en Git Bash. |
-| Estoy dentro del contenedor y `docker ps` no funciona. | Sal con `exit` y ejecuta `docker ps` desde la computadora. |
-| Estoy dentro de `docker-hadoop` y no encuentra `datos_200mb.csv`. | Usa `../datos_200mb.csv` o vuelve a la carpeta raiz `hadoop_isil`. |
+| Docker no abre. | Abre Docker Desktop y espera hasta que este operativo. |
+| `docker compose` no existe. | Actualiza Docker Desktop. En algunos equipos antiguos puede existir `docker-compose`. |
+| El contenedor `namenode` no aparece. | Revisa que estes dentro de `docker-hadoop` y vuelve a ejecutar `docker compose up -d`. |
+| Estoy dentro del contenedor y `docker ps` no funciona. | Sal con `exit` y ejecuta `docker ps` desde tu computadora. |
+| Estoy en `docker-hadoop` y no encuentra `datos_200mb.csv`. | Usa `../datos_200mb.csv` o vuelve a la carpeta raiz `hadoop_isil`. |
 | El archivo descargado no se llama `datos_200mb.csv`. | Verifica el nombre con `dir` o `ls -lh` y luego renombralo. |
-| `localhost:9870` abre, pero no veo el archivo. | Confirma primero que el archivo si se subio a HDFS con `hdfs dfs -ls /input` o `hdfs dfs -ls -h /data`. |
+| `localhost:9870` abre, pero no veo el archivo. | Confirma primero que el archivo si se subio con `hdfs dfs -ls -h /data`. |
 
 ## Cierre
 
 Idea principal de la practica:
-Hadoop se trabaja principalmente por comandos, pero `localhost:9870` permite comprobar visualmente que HDFS esta funcionando.
+Hadoop se trabaja principalmente por comandos, pero `localhost:9870` permite comprobar visualmente que HDFS esta funcionando y que el archivo pesado ya llego a la ruta `/data`.
