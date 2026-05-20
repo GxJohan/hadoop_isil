@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Semana 7 - MapReduce con Hadoop Streaming</title>
+  <style>
+    /* Paleta y variables principales para que el archivo siga siendo fácil de editar. */
+    :root {
+      --bg: #f4fbff;
+      --primary: #00a6d6;
+      --primary-dark: #0077a3;
+      --primary-soft: #dff6ff;
+      --text: #1f2937;
+      --muted: #4b5563;
+      --card: #ffffff;
+      --border: #bfe9f5;
+      --code-bg: #0f172a;
+      --code-text: #e0f2fe;
+      --success: #0f766e;
+      --warning: #b45309;
+      --shadow: 0 18px 45px rgba(0, 119, 163, 0.12);
+      --radius-lg: 24px;
+      --radius-md: 16px;
+      --radius-sm: 12px;
+    }
+
+    /* Reset pequeño para evitar inconsistencias visuales. */
+    * {
+      box-sizing: border-box;
+    }
+
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      overflow-x: hidden;
+    }
+
+    body {
+      margin: 0;
+      overflow-x: hidden;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(0, 166, 214, 0.15), transparent 28%),
+        radial-gradient(circle at top right, rgba(0, 119, 163, 0.12), transparent 24%),
+        linear-gradient(180deg, #ffffff 0%, var(--bg) 28%, var(--bg) 100%);
+      font-family: "Trebuchet MS", "Segoe UI", Verdana, sans-serif;
+      line-height: 1.65;
+    }
+
+    .container {
+      width: min(1000px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    /* Encabezado principal del manual. */
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 48px 0 32px;
+    }
+
+    .hero::before,
+    .hero::after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(0, 166, 214, 0.18), rgba(0, 119, 163, 0.05));
+      z-index: 0;
+    }
+
+    .hero::before {
+      width: 320px;
+      height: 320px;
+      right: -100px;
+      top: -120px;
+    }
+
+    .hero::after {
+      width: 220px;
+      height: 220px;
+      left: -80px;
+      bottom: -90px;
+    }
+
+    .hero__panel {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.86);
+      border: 1px solid rgba(191, 233, 245, 0.95);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      padding: 34px;
+      backdrop-filter: blur(10px);
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      font-size: 0.94rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--primary-dark);
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin-top: 0;
+      color: #0f3351;
+      font-family: Georgia, "Times New Roman", serif;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 4vw, 3.4rem);
+      line-height: 1.1;
+      margin-bottom: 14px;
+    }
+
+    .subtitle {
+      margin: 0;
+      max-width: 760px;
+      color: var(--muted);
+      font-size: 1.06rem;
+    }
+
+    .hero__badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: var(--primary-soft);
+      border: 1px solid var(--border);
+      color: var(--primary-dark);
+      font-weight: 700;
+      font-size: 0.94rem;
+    }
+
+    /* Navegación rápida para el paso a paso. */
+    .quick-nav {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(244, 251, 255, 0.92);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid rgba(191, 233, 245, 0.85);
+    }
+
+    .quick-nav__inner {
+      width: min(1000px, calc(100% - 32px));
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 14px 0;
+    }
+
+    .quick-nav a {
+      text-decoration: none;
+      color: var(--primary-dark);
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 0.92rem;
+      font-weight: 700;
+    }
+
+    main {
+      padding: 28px 0 52px;
+    }
+
+    .stack {
+      display: grid;
+      gap: 22px;
+      min-width: 0;
+    }
+
+    /* Tarjeta base reutilizable. */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      padding: 28px;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .section-intro {
+      margin-bottom: 16px;
+      color: var(--muted);
+    }
+
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      min-width: 0;
+    }
+
+    .mini-card {
+      padding: 18px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, #ffffff 0%, #f8fdff 100%);
+      min-width: 0;
+    }
+
+    .highlight {
+      border-left: 5px solid var(--primary);
+      background: var(--primary-soft);
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      color: #0d425c;
+    }
+
+    .warning-box {
+      border-left: 5px solid #f59e0b;
+      background: #fff7ed;
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      color: #7c2d12;
+    }
+
+    .step-list {
+      display: grid;
+      gap: 18px;
+      min-width: 0;
+    }
+
+    .step {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      background: linear-gradient(180deg, #ffffff 0%, #fbfeff 100%);
+      min-width: 0;
+    }
+
+    .step__head {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      margin-bottom: 14px;
+    }
+
+    .step__number {
+      flex: 0 0 auto;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: #ffffff;
+      font-weight: 800;
+    }
+
+    .step__title {
+      margin: 0;
+      font-size: 1.28rem;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .context-tag {
+      display: inline-block;
+      margin: 0 0 12px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: var(--primary-soft);
+      border: 1px solid var(--border);
+      color: var(--primary-dark);
+      font-weight: 700;
+      font-size: 0.92rem;
+    }
+
+    .code-block {
+      position: relative;
+      margin: 14px 0 0;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: var(--code-bg);
+      max-width: 100%;
+      min-width: 0;
+    }
+
+    .code-block__bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      background: rgba(15, 23, 42, 0.82);
+      border-bottom: 1px solid rgba(224, 242, 254, 0.12);
+    }
+
+    .code-label {
+      color: #bae6fd;
+      font-size: 0.84rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .copy-btn {
+      appearance: none;
+      border: 1px solid rgba(224, 242, 254, 0.28);
+      background: rgba(14, 165, 233, 0.18);
+      color: #e0f2fe;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 0.86rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .copy-btn:hover,
+    .copy-btn:focus-visible {
+      background: rgba(14, 165, 233, 0.32);
+    }
+
+    pre {
+      margin: 0;
+      padding: 18px;
+      overflow-x: auto;
+      max-width: 100%;
+      color: var(--code-text);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    code,
+    pre {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    }
+
+    .two-columns {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      min-width: 0;
+    }
+
+    .note-list,
+    .plain-list {
+      margin: 10px 0 0;
+      padding-left: 18px;
+    }
+
+    .note-list li,
+    .plain-list li {
+      margin-bottom: 8px;
+    }
+
+    .result-box {
+      margin-top: 16px;
+      padding: 16px;
+      border-radius: var(--radius-md);
+      border: 1px solid #bae6fd;
+      background: linear-gradient(180deg, #effbff 0%, #f8feff 100%);
+    }
+
+    .result-box strong {
+      color: var(--success);
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      max-width: 100%;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #ffffff;
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 14px;
+      border-bottom: 1px solid #e6f7fd;
+      vertical-align: top;
+    }
+
+    th {
+      background: var(--primary-soft);
+      color: var(--primary-dark);
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      min-width: 0;
+    }
+
+    .figure-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      background: #ffffff;
+      min-width: 0;
+      max-width: 100%;
+      overflow: hidden;
+    }
+
+    .figure-card img {
+      width: 100%;
+      max-width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 12px;
+      border: 1px solid #d6f2fb;
+      cursor: pointer;
+    }
+
+    .figure-card h3 {
+      margin: 12px 0 8px;
+      font-size: 1.1rem;
+    }
+
+    .figure-card p {
+      margin: 0 0 12px;
+      color: var(--muted);
+    }
+
+    .image-btn {
+      appearance: none;
+      border: 1px solid var(--border);
+      background: var(--primary-soft);
+      color: var(--primary-dark);
+      padding: 9px 12px;
+      border-radius: 999px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* Modal para ampliar capturas. */
+    .modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(15, 23, 42, 0.75);
+      z-index: 40;
+    }
+
+    .modal.is-open {
+      display: flex;
+    }
+
+    .modal__panel {
+      width: min(980px, 100%);
+      max-height: 90vh;
+      overflow: auto;
+      background: #ffffff;
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(191, 233, 245, 0.9);
+      box-shadow: 0 26px 55px rgba(15, 23, 42, 0.34);
+      padding: 18px;
+    }
+
+    .modal__top {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .modal__title {
+      margin: 0;
+      font-size: 1.2rem;
+    }
+
+    .close-btn {
+      appearance: none;
+      border: 1px solid var(--border);
+      background: #ffffff;
+      color: var(--primary-dark);
+      padding: 9px 12px;
+      border-radius: 999px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .modal__panel img {
+      width: 100%;
+      display: block;
+      border-radius: 14px;
+      border: 1px solid #d6f2fb;
+    }
+
+    .modal__caption {
+      margin: 14px 0 0;
+      color: var(--muted);
+    }
+
+    footer {
+      padding: 0 0 36px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 0.95rem;
+    }
+
+    @media (max-width: 760px) {
+      .hero__panel,
+      .card {
+        padding: 22px;
+      }
+
+      .quick-nav__inner {
+        flex-wrap: wrap;
+        justify-content: center;
+        padding-bottom: 10px;
+      }
+
+      .quick-nav a {
+        white-space: normal;
+        text-align: center;
+      }
+
+      .step__head {
+        align-items: center;
+      }
+
+      .code-block__bar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .copy-btn {
+        width: 100%;
+        text-align: center;
+      }
+
+      .gallery {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .hero {
+        padding: 28px 0 18px;
+      }
+
+      .hero__badges {
+        gap: 8px;
+      }
+
+      .badge,
+      .context-tag {
+        font-size: 0.85rem;
+      }
+
+      .step {
+        padding: 16px;
+      }
+
+      .step__head {
+        gap: 10px;
+      }
+
+      .step__number {
+        width: 34px;
+        height: 34px;
+      }
+
+      pre {
+        padding: 14px;
+        font-size: 0.88rem;
+      }
+
+      th,
+      td {
+        padding: 10px;
+      }
+
+      .figure-card {
+        padding: 12px;
+      }
+
+      .modal {
+        padding: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Encabezado principal del manual de Semana 7. -->
+  <header class="hero">
+    <div class="container">
+      <div class="hero__panel">
+        <p class="eyebrow">Curso de Big Data - ISIL</p>
+        <h1>Semana 7 - MapReduce con Hadoop Streaming</h1>
+        <p class="subtitle">
+          Manual visual y operativo para continuar sobre el mismo proyecto <code>hadoop_isil</code>,
+          levantar Hadoop con soporte para Python y ejecutar un conteo por <code>Major_Category</code>
+          usando <code>ai_student_impact_dataset.csv</code>.
+        </p>
+        <div class="hero__badges">
+          <span class="badge">Semana 7</span>
+          <span class="badge">Tema: Procesamiento distribuido</span>
+          <span class="badge">Hadoop Streaming + Python</span>
+          <span class="badge">Windows, macOS y Ubuntu</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Menú rápido para moverse por la práctica sin perderse. -->
+  <nav class="quick-nav" aria-label="Navegación rápida">
+    <div class="quick-nav__inner">
+      <a href="#antes">Antes de empezar</a>
+      <a href="#estructura">Estructura</a>
+      <a href="#pasos">Paso a paso</a>
+      <a href="#resultado">Resultado</a>
+      <a href="#navegador">Localhost 9870</a>
+      <a href="#imagenes">Apoyo visual</a>
+      <a href="#errores">Errores comunes</a>
+    </div>
+  </nav>
+
+  <main>
+    <div class="container stack">
+      <!-- Sección para aclarar el punto más importante: continuar el mismo repo. -->
+      <section class="card" id="antes">
+        <h2>Antes de Empezar</h2>
+        <p class="section-intro">
+          Esta práctica continúa sobre la misma carpeta <code>hadoop_isil</code>.
+        </p>
+        <div class="highlight">
+          <strong>Idea clave:</strong> si ya trabajaste con <code>hadoop_isil</code>, no vuelvas a clonar. Solo entra y ejecuta <code>git pull</code>.
+        </div>
+        <div class="two-columns" style="margin-top: 16px;">
+          <div class="mini-card">
+            <h3>Si ya tienes hadoop_isil</h3>
+            <p class="muted">Usa este caso si vienes desde la práctica anterior.</p>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">Tu computadora</span>
+                <button class="copy-btn" data-copy-target="cmd-ya">Copiar</button>
+              </div>
+              <pre id="cmd-ya">cd hadoop_isil
+git pull</pre>
+            </div>
+          </div>
+          <div class="mini-card">
+            <h3>Si todavía no tienes hadoop_isil</h3>
+            <p class="muted">Usa este caso solo si no trabajaste la práctica anterior.</p>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">Tu computadora</span>
+                <button class="copy-btn" data-copy-target="cmd-nuevo">Copiar</button>
+              </div>
+              <pre id="cmd-nuevo">git clone https://github.com/GxJohan/hadoop_isil.git
+cd hadoop_isil</pre>
+            </div>
+          </div>
+        </div>
+        <div class="warning-box" style="margin-top: 16px;">
+          <strong>Regla práctica:</strong> aquí los comandos empiezan con <code>docker</code>, así que se ejecutan desde la terminal de tu computadora.
+        </div>
+      </section>
+
+      <!-- Estructura del proyecto para que el alumno se ubique antes de ejecutar comandos. -->
+      <section class="card" id="estructura">
+        <h2>Estructura Esperada</h2>
+        <p class="section-intro">
+          Antes de comenzar, revisa que el proyecto tenga esta base. El dataset debe estar en la raíz.
+        </p>
+        <div class="code-block">
+          <div class="code-block__bar">
+            <span class="code-label">Estructura</span>
+            <button class="copy-btn" data-copy-target="estructura-proyecto">Copiar</button>
+          </div>
+          <pre id="estructura-proyecto">hadoop_isil/
+├── docker-hadoop/
+├── ai_student_impact_dataset.csv
+├── docker-compose.week7.yml
+├── week7/
+│   ├── docker/
+│   ├── scripts/
+│   └── README.md
+├── README.md
+├── index.html
+└── week7.html</pre>
+        </div>
+        <div class="mini-grid" style="margin-top: 16px;">
+          <article class="mini-card">
+            <h3>docker-hadoop</h3>
+            <p>Base del entorno Hadoop.</p>
+          </article>
+          <article class="mini-card">
+            <h3>ai_student_impact_dataset.csv</h3>
+            <p>Archivo de entrada para el trabajo de MapReduce.</p>
+          </article>
+          <article class="mini-card">
+            <h3>docker-compose.week7.yml</h3>
+            <p>Levanta Semana 7 con imágenes que ya incluyen <code>python3</code>.</p>
+          </article>
+          <article class="mini-card">
+            <h3>week7/scripts</h3>
+            <p>Guarda el <code>mapper</code> y el <code>reducer</code>.</p>
+          </article>
+        </div>
+      </section>
+
+      <!-- Paso a paso operativo principal de la práctica. -->
+      <section class="card" id="pasos">
+        <h2>Paso a Paso</h2>
+        <p class="section-intro">
+          Sigue el orden. Cada bloque indica qué debes ejecutar y qué deberías observar.
+        </p>
+
+        <div class="step-list">
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">1</div>
+              <div>
+                <h3 class="step__title">Levantar el entorno de Semana 7</h3>
+                <p class="muted">Hazlo desde la carpeta raíz <code>hadoop_isil</code>.</p>
+              </div>
+            </div>
+            <span class="context-tag">Ejecutar en la terminal de tu computadora</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">Comandos</span>
+                <button class="copy-btn" data-copy-target="step1">Copiar</button>
+              </div>
+              <pre id="step1">docker compose -f docker-compose.week7.yml up --build -d
+docker compose -f docker-compose.week7.yml ps</pre>
+            </div>
+            <div class="result-box">
+              <strong>Debes ver:</strong> contenedores como <code>namenode</code>, <code>datanode</code>,
+              <code>resourcemanager</code>, <code>nodemanager</code> e <code>historyserver</code> en estado saludable.
+            </div>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">2</div>
+              <div>
+                <h3 class="step__title">Confirmar que Python está dentro del clúster</h3>
+                <p class="muted">No se usa el Python local. Python debe estar dentro de Docker.</p>
+              </div>
+            </div>
+            <span class="context-tag">Ejecutar en la terminal de tu computadora</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">Comandos</span>
+                <button class="copy-btn" data-copy-target="step2">Copiar</button>
+              </div>
+              <pre id="step2">docker exec namenode sh -lc 'python3 --version && python --version'
+docker exec nodemanager sh -lc 'python3 --version && python --version'</pre>
+            </div>
+            <div class="result-box">
+              <strong>Debes ver:</strong> una versión de Python en ambos contenedores. En esta práctica validada es <code>Python 3.5.3</code>.
+            </div>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">3</div>
+              <div>
+                <h3 class="step__title">Subir el dataset a HDFS</h3>
+                <p class="muted">El archivo debe llamarse <code>ai_student_impact_dataset.csv</code> y estar en la raíz.</p>
+              </div>
+            </div>
+            <span class="context-tag">Ejecutar en la terminal de tu computadora</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">Comandos</span>
+                <button class="copy-btn" data-copy-target="step3">Copiar</button>
+              </div>
+              <pre id="step3">docker exec namenode /opt/hadoop-3.2.1/bin/hdfs dfs -mkdir -p /data
+docker exec namenode /opt/hadoop-3.2.1/bin/hdfs dfs -put -f /workshop/ai_student_impact_dataset.csv /data/
+docker exec namenode /opt/hadoop-3.2.1/bin/hdfs dfs -ls -h /data
+docker exec namenode sh -lc '/opt/hadoop-3.2.1/bin/hdfs dfs -head /data/ai_student_impact_dataset.csv | head -n 5'</pre>
+            </div>
+            <div class="result-box">
+              <strong>Debes ver:</strong> el archivo dentro de <code>/data</code> y las primeras filas del CSV al final.
+            </div>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">4</div>
+              <div>
+                <h3 class="step__title">Probar el mapper y el reducer con una muestra corta</h3>
+                <p class="muted">Esta prueba rápida ayuda a detectar errores antes del job completo.</p>
+              </div>
+            </div>
+            <span class="context-tag">Ejecutar en la terminal de tu computadora</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">Comando</span>
+                <button class="copy-btn" data-copy-target="step4">Copiar</button>
+              </div>
+              <pre id="step4">docker exec namenode sh -lc 'head -n 20 /workshop/ai_student_impact_dataset.csv | python3 /workshop/week7/scripts/mapper_major_category.py | sort | python3 /workshop/week7/scripts/reducer_count.py'</pre>
+            </div>
+            <div class="result-box">
+              <strong>Debes ver:</strong> categorías como <code>Arts</code>, <code>Business</code>, <code>Humanities</code>,
+              <code>Medical</code> y <code>STEM</code> con números pequeños.
+            </div>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">5</div>
+              <div>
+                <h3 class="step__title">Ejecutar el trabajo real de Hadoop Streaming</h3>
+                <p class="muted">Este es el MapReduce completo. Primero limpia la salida anterior y luego lanza el job.</p>
+              </div>
+            </div>
+            <span class="context-tag">Ejecutar en la terminal de tu computadora</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">Limpiar salida anterior</span>
+                <button class="copy-btn" data-copy-target="step5a">Copiar</button>
+              </div>
+              <pre id="step5a">docker exec namenode /opt/hadoop-3.2.1/bin/hdfs dfs -rm -r -f /output_major_category</pre>
+            </div>
+            <div class="code-block" style="margin-top: 14px;">
+              <div class="code-block__bar">
+                <span class="code-label">Ejecutar el job</span>
+                <button class="copy-btn" data-copy-target="step5b">Copiar</button>
+              </div>
+              <pre id="step5b">docker exec namenode sh -lc '/opt/hadoop-3.2.1/bin/hadoop jar /opt/hadoop-3.2.1/share/hadoop/tools/lib/hadoop-streaming-3.2.1.jar -files /workshop/week7/scripts/mapper_major_category.py,/workshop/week7/scripts/reducer_count.py -mapper "python3 mapper_major_category.py" -reducer "python3 reducer_count.py" -input /data/ai_student_impact_dataset.csv -output /output_major_category'</pre>
+            </div>
+            <div class="result-box">
+              <strong>Debes ver:</strong> mensajes de avance del job hasta llegar a <code>map 100% reduce 100%</code>.
+            </div>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">6</div>
+              <div>
+                <h3 class="step__title">Revisar el resultado final</h3>
+                <p class="muted">Aquí compruebas que Hadoop procesó el dataset y dejó una salida en HDFS.</p>
+              </div>
+            </div>
+            <span class="context-tag">Ejecutar en la terminal de tu computadora</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">Comandos</span>
+                <button class="copy-btn" data-copy-target="step6">Copiar</button>
+              </div>
+              <pre id="step6">docker exec namenode /opt/hadoop-3.2.1/bin/hdfs dfs -ls -h /output_major_category
+docker exec namenode sh -lc '/opt/hadoop-3.2.1/bin/hdfs dfs -cat /output_major_category/part-00000 | head -n 20'</pre>
+            </div>
+            <div class="result-box">
+              <strong>Resultado validado en esta implementación:</strong>
+              <pre>Arts       5933
+Business   12538
+Humanities 9994
+Medical    6476
+STEM       15059</pre>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Resumen de lo que realmente significa el resultado obtenido. -->
+      <section class="card" id="resultado">
+        <h2>Qué Significa el Resultado</h2>
+        <p class="section-intro">
+          El trabajo cuenta cuántos estudiantes pertenecen a cada categoría de carrera.
+        </p>
+        <div class="mini-grid">
+          <article class="mini-card">
+            <h3>Mapper</h3>
+            <p>Lee cada fila del CSV y extrae el valor de <code>Major_Category</code>.</p>
+          </article>
+          <article class="mini-card">
+            <h3>Shuffle de Hadoop</h3>
+            <p>Agrupa automáticamente las categorías iguales antes de enviarlas al reducer.</p>
+          </article>
+          <article class="mini-card">
+            <h3>Reducer</h3>
+            <p>Suma cuántas veces apareció cada categoría y guarda el resultado final en HDFS.</p>
+          </article>
+          <article class="mini-card">
+            <h3>Salida</h3>
+            <p>El archivo final queda en <code>/output_major_category/part-00000</code>.</p>
+          </article>
+        </div>
+      </section>
+
+      <!-- Verificación visual para conectar consola con la interfaz web del NameNode. -->
+      <section class="card" id="navegador">
+        <h2>Qué Debes Ver en el Navegador</h2>
+        <p class="section-intro">
+          Después del job, también puedes comprobar el resultado desde la interfaz web de Hadoop.
+        </p>
+        <div class="step-list">
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">A</div>
+              <div>
+                <h3 class="step__title">Abrir la interfaz del NameNode</h3>
+                <p class="muted">Usa tu navegador normal.</p>
+              </div>
+            </div>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">URL</span>
+                <button class="copy-btn" data-copy-target="nav1">Copiar</button>
+              </div>
+              <pre id="nav1">http://localhost:9870</pre>
+            </div>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">B</div>
+              <div>
+                <h3 class="step__title">Ir al explorador de HDFS</h3>
+                <p class="muted">En la parte superior busca la navegación principal.</p>
+              </div>
+            </div>
+            <ul class="plain-list">
+              <li>Entrar a <strong>Utilities</strong></li>
+              <li>Elegir <strong>Browse the file system</strong></li>
+            </ul>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">C</div>
+              <div>
+                <h3 class="step__title">Revisar las carpetas importantes</h3>
+                <p class="muted">Primero confirma el archivo de entrada y luego la salida del MapReduce.</p>
+              </div>
+            </div>
+            <ul class="plain-list">
+              <li>Revisar <code>/data</code> para ver <code>ai_student_impact_dataset.csv</code></li>
+              <li>Revisar <code>/output_major_category</code> para ver <code>part-00000</code></li>
+            </ul>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">D</div>
+              <div>
+                <h3 class="step__title">Si no aparece la salida</h3>
+                <p class="muted">Vuelve a comprobar por consola para confirmar si el job terminó bien.</p>
+              </div>
+            </div>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">Verificación rápida</span>
+                <button class="copy-btn" data-copy-target="nav2">Copiar</button>
+              </div>
+              <pre id="nav2">docker exec namenode /opt/hadoop-3.2.1/bin/hdfs dfs -ls -h /data
+docker exec namenode /opt/hadoop-3.2.1/bin/hdfs dfs -ls -h /output_major_category</pre>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Apoyo visual usando las capturas existentes del proyecto. -->
+      <section class="card" id="imagenes">
+        <h2>Apoyo Visual</h2>
+        <p class="section-intro">
+          Estas capturas ayudan a reconocer Docker y HDFS durante la práctica.
+        </p>
+        <div class="gallery">
+          <article class="figure-card">
+            <img src="images/image.png" alt="Repositorio base del proyecto hadoop_isil" data-modal-title="Repositorio base" data-modal-caption="Lo que se ve: el repositorio base hadoop_isil en GitHub. Para Semana 7, quien ya lo tiene solo debe hacer git pull." class="zoomable-image">
+            <h3>Repositorio base</h3>
+            <p>Lo que se ve: el proyecto que se sigue usando en Semana 7.</p>
+            <button class="image-btn" type="button" data-modal-title="Repositorio base" data-modal-caption="Lo que se ve: el repositorio base hadoop_isil en GitHub. Para Semana 7, quien ya lo tiene solo debe hacer git pull." data-modal-src="images/image.png">Ampliar imagen</button>
+          </article>
+
+          <article class="figure-card">
+            <img src="images/image copy.png" alt="Contenedores Hadoop en Docker Desktop" data-modal-title="Contenedores activos" data-modal-caption="Lo que se ve: los contenedores de Hadoop en Docker Desktop. En Semana 7 deben quedar levantados antes de ejecutar Hadoop Streaming." class="zoomable-image">
+            <h3>Contenedores activos</h3>
+            <p>Lo que se ve: Docker Desktop con los contenedores del entorno Hadoop.</p>
+            <button class="image-btn" type="button" data-modal-title="Contenedores activos" data-modal-caption="Lo que se ve: los contenedores de Hadoop en Docker Desktop. En Semana 7 deben quedar levantados antes de ejecutar Hadoop Streaming." data-modal-src="images/image copy.png">Ampliar imagen</button>
+          </article>
+
+          <article class="figure-card">
+            <img src="images/image copy 2.png" alt="Pantalla principal del NameNode" data-modal-title="NameNode en localhost:9870" data-modal-caption="Lo que se ve: la pantalla principal del NameNode. Desde aquí se entra a Utilities y luego a Browse the file system." class="zoomable-image">
+            <h3>NameNode</h3>
+            <p>Lo que se ve: la interfaz principal que abre en <code>http://localhost:9870</code>.</p>
+            <button class="image-btn" type="button" data-modal-title="NameNode en localhost:9870" data-modal-caption="Lo que se ve: la pantalla principal del NameNode. Desde aquí se entra a Utilities y luego a Browse the file system." data-modal-src="images/image copy 2.png">Ampliar imagen</button>
+          </article>
+
+          <article class="figure-card">
+            <img src="images/image copy 4.png" alt="Vista de un archivo dentro de HDFS" data-modal-title="Archivo dentro de HDFS" data-modal-caption="Lo que se ve: un archivo ya visible dentro de HDFS. En tu práctica de Semana 7, además de /data, también debes poder revisar /output_major_category." class="zoomable-image">
+            <h3>Archivo visible en HDFS</h3>
+            <p>Lo que se ve: cómo luce la exploración de archivos dentro del navegador de Hadoop.</p>
+            <button class="image-btn" type="button" data-modal-title="Archivo dentro de HDFS" data-modal-caption="Lo que se ve: un archivo ya visible dentro de HDFS. En tu práctica de Semana 7, además de /data, también debes poder revisar /output_major_category." data-modal-src="images/image copy 4.png">Ampliar imagen</button>
+          </article>
+        </div>
+      </section>
+
+      <!-- Tabla breve de problemas frecuentes para que el alumno no se bloquee. -->
+      <section class="card" id="errores">
+        <h2>Errores Comunes</h2>
+        <p class="section-intro">
+          Si algo no sale como esperas, revisa esta tabla antes de repetir la práctica.
+        </p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Problema</th>
+                <th>Qué significa</th>
+                <th>Qué hacer</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>python3 --version</code> falla en el contenedor</td>
+                <td>El stack de Semana 7 no se levantó con las imágenes correctas.</td>
+                <td>Vuelve a ejecutar <code>docker compose -f docker-compose.week7.yml up --build -d</code>.</td>
+              </tr>
+              <tr>
+                <td>No encuentra <code>ai_student_impact_dataset.csv</code></td>
+                <td>El archivo no está en la raíz <code>hadoop_isil</code> o tiene otro nombre.</td>
+                <td>Mueve o renombra el archivo para que quede como <code>hadoop_isil/ai_student_impact_dataset.csv</code>.</td>
+              </tr>
+              <tr>
+                <td>El job no crea <code>/output_major_category</code></td>
+                <td>Puede haber fallado el job o ya existía una salida previa.</td>
+                <td>Ejecuta primero <code>docker exec namenode /opt/hadoop-3.2.1/bin/hdfs dfs -rm -r -f /output_major_category</code> y luego vuelve a lanzar el job.</td>
+              </tr>
+              <tr>
+                <td><code>localhost:9870</code> abre, pero no ves la salida</td>
+                <td>Puede que el archivo sí exista, pero aún no estés en la ruta correcta.</td>
+                <td>Busca <code>/output_major_category</code> en HDFS o verifica por consola con <code>docker exec namenode /opt/hadoop-3.2.1/bin/hdfs dfs -ls -h /output_major_category</code>.</td>
+              </tr>
+              <tr>
+                <td>En Windows o macOS el comando parece largo</td>
+                <td>Es normal. El flujo usa comandos completos desde la computadora.</td>
+                <td>Usa los botones de copiar y pega cada bloque completo en tu terminal.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Cierre breve para reforzar la idea de la práctica. -->
+      <section class="card">
+        <h2>Idea Principal de Esta Práctica</h2>
+        <p class="section-intro">
+          Hadoop sigue ejecutándose dentro de Docker, HDFS guarda el archivo y Hadoop Streaming usa Python para el procesamiento distribuido.
+        </p>
+        <div class="highlight">
+          <strong>Resumen:</strong> en Semana 7 no empiezas de cero. Actualizas <code>hadoop_isil</code>, subes un dataset limpio a HDFS y ejecutas un MapReduce real con Python.
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    Semana 7 - Procesamiento distribuido con MapReduce, Hadoop Streaming y Python.
+  </footer>
+
+  <!-- Modal para ampliar capturas sin salir del manual. -->
+  <div class="modal" id="imageModal" aria-hidden="true">
+    <div class="modal__panel" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal__top">
+        <h3 class="modal__title" id="modalTitle">Vista ampliada</h3>
+        <button class="close-btn" type="button" id="closeModal">Cerrar</button>
+      </div>
+      <img id="modalImage" src="" alt="">
+      <p class="modal__caption" id="modalCaption"></p>
+    </div>
+  </div>
+
+  <script>
+    // Botones para copiar comandos directamente al portapapeles.
+    const copyButtons = document.querySelectorAll(".copy-btn");
+
+    copyButtons.forEach((button) => {
+      button.addEventListener("click", async () => {
+        const targetId = button.getAttribute("data-copy-target");
+        const codeElement = document.getElementById(targetId);
+
+        if (!codeElement) {
+          return;
+        }
+
+        try {
+          await navigator.clipboard.writeText(codeElement.innerText.trim());
+          const previousLabel = button.textContent;
+          button.textContent = "Copiado";
+          setTimeout(() => {
+            button.textContent = previousLabel;
+          }, 1400);
+        } catch (error) {
+          button.textContent = "No se pudo copiar";
+          setTimeout(() => {
+            button.textContent = "Copiar";
+          }, 1800);
+        }
+      });
+    });
+
+    // Lógica del modal para ampliar capturas de pantalla con su descripción.
+    const modal = document.getElementById("imageModal");
+    const modalImage = document.getElementById("modalImage");
+    const modalTitle = document.getElementById("modalTitle");
+    const modalCaption = document.getElementById("modalCaption");
+    const closeModalButton = document.getElementById("closeModal");
+    const imageButtons = document.querySelectorAll(".image-btn");
+    const zoomableImages = document.querySelectorAll(".zoomable-image");
+
+    function openModal(src, title, caption, altText) {
+      modalImage.src = src;
+      modalImage.alt = altText || title;
+      modalTitle.textContent = title || "Vista ampliada";
+      modalCaption.textContent = caption || "";
+      modal.classList.add("is-open");
+      modal.setAttribute("aria-hidden", "false");
+    }
+
+    function closeModal() {
+      modal.classList.remove("is-open");
+      modal.setAttribute("aria-hidden", "true");
+      modalImage.src = "";
+      modalImage.alt = "";
+    }
+
+    imageButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        openModal(
+          button.getAttribute("data-modal-src"),
+          button.getAttribute("data-modal-title"),
+          button.getAttribute("data-modal-caption"),
+          button.getAttribute("data-modal-title")
+        );
+      });
+    });
+
+    zoomableImages.forEach((image) => {
+      image.addEventListener("click", () => {
+        openModal(
+          image.getAttribute("src"),
+          image.getAttribute("data-modal-title"),
+          image.getAttribute("data-modal-caption"),
+          image.getAttribute("alt")
+        );
+      });
+    });
+
+    closeModalButton.addEventListener("click", closeModal);
+
+    modal.addEventListener("click", (event) => {
+      if (event.target === modal) {
+        closeModal();
+      }
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && modal.classList.contains("is-open")) {
+        closeModal();
+      }
+    });
+  </script>
+</body>
+</html>

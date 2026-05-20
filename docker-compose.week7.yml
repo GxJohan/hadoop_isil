@@ -1,0 +1,75 @@
+services:
+  namenode:
+    build:
+      context: .
+      dockerfile: week7/docker/namenode-python.Dockerfile
+    image: hadoop_isil/week7-namenode:3.2.1-python3
+    container_name: namenode
+    restart: always
+    ports:
+      - 9870:9870
+      - 9000:9000
+    volumes:
+      - hadoop_namenode:/hadoop/dfs/name
+      - ./:/workshop:ro
+    environment:
+      - CLUSTER_NAME=test
+    env_file:
+      - ./docker-hadoop/hadoop.env
+
+  datanode:
+    build:
+      context: .
+      dockerfile: week7/docker/datanode-python.Dockerfile
+    image: hadoop_isil/week7-datanode:3.2.1-python3
+    container_name: datanode
+    restart: always
+    volumes:
+      - hadoop_datanode:/hadoop/dfs/data
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870"
+    env_file:
+      - ./docker-hadoop/hadoop.env
+
+  resourcemanager:
+    build:
+      context: .
+      dockerfile: week7/docker/resourcemanager-python.Dockerfile
+    image: hadoop_isil/week7-resourcemanager:3.2.1-python3
+    container_name: resourcemanager
+    restart: always
+    environment:
+      SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode:9864"
+    env_file:
+      - ./docker-hadoop/hadoop.env
+
+  nodemanager1:
+    build:
+      context: .
+      dockerfile: week7/docker/nodemanager-python.Dockerfile
+    image: hadoop_isil/week7-nodemanager:3.2.1-python3
+    container_name: nodemanager
+    restart: always
+    environment:
+      SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode:9864 resourcemanager:8088"
+    env_file:
+      - ./docker-hadoop/hadoop.env
+
+  historyserver:
+    build:
+      context: .
+      dockerfile: week7/docker/historyserver-python.Dockerfile
+    image: hadoop_isil/week7-historyserver:3.2.1-python3
+    container_name: historyserver
+    restart: always
+    environment:
+      SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode:9864 resourcemanager:8088"
+    volumes:
+      - hadoop_historyserver:/hadoop/yarn/timeline
+    env_file:
+      - ./docker-hadoop/hadoop.env
+
+volumes:
+  hadoop_namenode:
+  hadoop_datanode:
+  hadoop_historyserver:
