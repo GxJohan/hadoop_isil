@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Semana 9 - Spark SQL conectado a Hadoop</title>
+  <style>
+    :root {
+      --bg: #f4fbff;
+      --primary: #00a6d6;
+      --primary-dark: #0077a3;
+      --primary-soft: #dff6ff;
+      --text: #1f2937;
+      --muted: #4b5563;
+      --card: #ffffff;
+      --border: #bfe9f5;
+      --code-bg: #0f172a;
+      --code-text: #e0f2fe;
+      --success: #0f766e;
+      --warning: #b45309;
+      --shadow: 0 18px 45px rgba(0, 119, 163, 0.12);
+      --radius-lg: 24px;
+      --radius-md: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      overflow-x: hidden;
+    }
+
+    body {
+      margin: 0;
+      overflow-x: hidden;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(0, 166, 214, 0.15), transparent 28%),
+        radial-gradient(circle at top right, rgba(0, 119, 163, 0.12), transparent 24%),
+        linear-gradient(180deg, #ffffff 0%, var(--bg) 28%, var(--bg) 100%);
+      font-family: "Trebuchet MS", "Segoe UI", Verdana, sans-serif;
+      line-height: 1.65;
+    }
+
+    .container {
+      width: min(1000px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .hero {
+      padding: 48px 0 32px;
+    }
+
+    .hero__panel,
+    .card {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(191, 233, 245, 0.95);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .hero__panel {
+      padding: 34px;
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      font-size: 0.94rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--primary-dark);
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin-top: 0;
+      color: #0f3351;
+      font-family: Georgia, "Times New Roman", serif;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      line-height: 1.1;
+      margin-bottom: 14px;
+    }
+
+    .subtitle,
+    .section-intro,
+    .muted {
+      color: var(--muted);
+    }
+
+    .hero__badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .logo-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .logo-card {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 120px;
+      padding: 16px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, #ffffff 0%, #f8fdff 100%);
+    }
+
+    .logo-card img {
+      max-width: 100%;
+      max-height: 72px;
+      height: auto;
+      display: block;
+      object-fit: contain;
+    }
+
+    .badge,
+    .context-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: var(--primary-soft);
+      border: 1px solid var(--border);
+      color: var(--primary-dark);
+      font-weight: 700;
+      font-size: 0.92rem;
+    }
+
+    .quick-nav {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(244, 251, 255, 0.92);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid rgba(191, 233, 245, 0.85);
+    }
+
+    .quick-nav__inner {
+      width: min(1000px, calc(100% - 32px));
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 14px 0;
+    }
+
+    .quick-nav a {
+      text-decoration: none;
+      color: var(--primary-dark);
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 0.92rem;
+      font-weight: 700;
+    }
+
+    main {
+      padding: 28px 0 52px;
+    }
+
+    .stack,
+    .step-list,
+    .mini-grid {
+      display: grid;
+      gap: 22px;
+    }
+
+    .card {
+      padding: 28px;
+    }
+
+    .mini-grid {
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .mini-card,
+    .step {
+      padding: 18px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, #ffffff 0%, #f8fdff 100%);
+    }
+
+    .highlight {
+      border-left: 5px solid var(--primary);
+      background: var(--primary-soft);
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      color: #0d425c;
+    }
+
+    .warning-box {
+      border-left: 5px solid #f59e0b;
+      background: #fff7ed;
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      color: #7c2d12;
+    }
+
+    .step__head {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      margin-bottom: 14px;
+    }
+
+    .step__number {
+      flex: 0 0 auto;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: #ffffff;
+      font-weight: 800;
+    }
+
+    .step__title {
+      margin: 0;
+      font-size: 1.28rem;
+    }
+
+    .code-block {
+      position: relative;
+      margin: 14px 0 0;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: var(--code-bg);
+    }
+
+    .code-block__bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      background: rgba(15, 23, 42, 0.82);
+      border-bottom: 1px solid rgba(224, 242, 254, 0.12);
+    }
+
+    .code-label {
+      color: #bae6fd;
+      font-size: 0.84rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .copy-btn {
+      appearance: none;
+      border: 1px solid rgba(224, 242, 254, 0.28);
+      background: rgba(14, 165, 233, 0.18);
+      color: #e0f2fe;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 0.86rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    pre {
+      margin: 0;
+      padding: 18px;
+      overflow-x: auto;
+      color: var(--code-text);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    code,
+    pre {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    }
+
+    .result-box {
+      margin-top: 16px;
+      padding: 16px;
+      border-radius: var(--radius-md);
+      border: 1px solid #bae6fd;
+      background: linear-gradient(180deg, #effbff 0%, #f8feff 100%);
+    }
+
+    .result-box strong {
+      color: var(--success);
+    }
+
+    .plain-list {
+      margin: 10px 0 0;
+      padding-left: 18px;
+    }
+
+    .plain-list li {
+      margin-bottom: 8px;
+    }
+
+    footer {
+      padding: 0 0 36px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 0.95rem;
+    }
+
+    @media (max-width: 760px) {
+      .hero__panel,
+      .card {
+        padding: 22px;
+      }
+
+      .quick-nav__inner {
+        justify-content: center;
+      }
+
+      .code-block__bar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .copy-btn {
+        width: 100%;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="container">
+      <div class="hero__panel">
+        <p class="eyebrow">Curso de Big Data - ISIL</p>
+        <h1>Semana 9 - Spark SQL conectado a Hadoop</h1>
+        <p class="subtitle">
+          Guía práctica para reutilizar el clúster Hadoop del proyecto <code>hadoop_isil</code>,
+          confirmar el dataset en HDFS y trabajar con <code>Spark SQL</code> leyendo
+          <code>ai_student_impact_dataset.csv</code> desde <code>HDFS</code>.
+        </p>
+        <div class="hero__badges">
+          <span class="badge">Semana 9</span>
+          <span class="badge">Tema principal: Spark SQL</span>
+          <span class="badge">Hadoop + HDFS + PySpark</span>
+          <span class="badge">Dataset en HDFS</span>
+        </div>
+        <div class="logo-strip" aria-label="Logos oficiales">
+          <div class="logo-card">
+            <img
+              src="https://hadoop.apache.org/hadoop-logo.jpg"
+              alt="Logo oficial de Apache Hadoop"
+              loading="lazy"
+              referrerpolicy="no-referrer"
+            >
+          </div>
+          <div class="logo-card">
+            <img
+              src="https://apache.org/logos/res/spark/spark.png"
+              alt="Logo oficial de Apache Spark"
+              loading="lazy"
+              referrerpolicy="no-referrer"
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <nav class="quick-nav" aria-label="Navegación rápida">
+    <div class="quick-nav__inner">
+      <a href="#antes">Antes de empezar</a>
+      <a href="#hdfs">Bloque HDFS</a>
+      <a href="#spark">Spark SQL</a>
+      <a href="#consultas">Consultas</a>
+      <a href="#errores">Errores comunes</a>
+    </div>
+  </nav>
+
+  <main>
+    <div class="container stack">
+      <section class="card" id="antes">
+        <h2>Antes de Empezar</h2>
+        <p class="section-intro">
+          Esta semana no empieza desde cero. Primero se deja listo HDFS y luego se conecta Spark al mismo entorno.
+        </p>
+        <div class="highlight">
+          <strong>Idea clave:</strong> si el archivo <code>ai_student_impact_dataset.csv</code> ya aparece en
+          <code>/data</code> dentro de HDFS, recién ahí tiene sentido entrar a PySpark.
+        </div>
+        <div class="mini-grid" style="margin-top: 16px;">
+          <article class="mini-card">
+            <h3>Carpeta correcta</h3>
+            <p>Trabaja desde la raíz <code>hadoop_isil</code>.</p>
+          </article>
+          <article class="mini-card">
+            <h3>Archivo requerido</h3>
+            <p>Debe existir <code>ai_student_impact_dataset.csv</code> en la raíz del proyecto.</p>
+          </article>
+          <article class="mini-card">
+            <h3>Docker activo</h3>
+            <p>Docker Desktop debe estar levantado antes de ejecutar comandos.</p>
+          </article>
+          <article class="mini-card">
+            <h3>Clúster correcto</h3>
+            <p>Debes usar el entorno de <code>docker-compose.week7.yml</code>, no solo <code>docker-hadoop</code>.</p>
+          </article>
+        </div>
+        <div class="warning-box" style="margin-top: 16px;">
+          <strong>Importante:</strong> el bloque de HDFS de abajo es el punto mínimo necesario para confirmar que
+          Spark luego podrá leer el archivo desde <code>hdfs://namenode:9000/data/...</code>.
+        </div>
+      </section>
+
+      <section class="card" id="hdfs">
+        <h2>Bloque Base: dejar HDFS listo</h2>
+        <p class="section-intro">
+          Este bloque viene de la práctica anterior y se mantiene igual. Hasta aquí debes llegar antes de hablar de Spark SQL.
+        </p>
+
+        <div class="step-list">
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">1</div>
+              <div>
+                <h3 class="step__title">Levantar el entorno Hadoop</h3>
+                <p class="muted">Hazlo desde la raíz <code>hadoop_isil</code>.</p>
+              </div>
+            </div>
+            <span class="context-tag">Terminal de tu computadora</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">Comandos</span>
+                <button class="copy-btn" data-copy-target="w9-step1">Copiar</button>
+              </div>
+              <pre id="w9-step1">docker compose -f docker-compose.week7.yml up --build -d
+docker compose -f docker-compose.week7.yml ps</pre>
+            </div>
+            <div class="result-box">
+              <strong>Debes ver:</strong> <code>namenode</code>, <code>datanode</code>, <code>resourcemanager</code>,
+              <code>nodemanager</code> e <code>historyserver</code> levantados.
+            </div>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">2</div>
+              <div>
+                <h3 class="step__title">Subir el dataset a HDFS</h3>
+                <p class="muted">El archivo debe llamarse <code>ai_student_impact_dataset.csv</code> y estar en la raíz.</p>
+              </div>
+            </div>
+            <span class="context-tag">Terminal de tu computadora</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">Comandos</span>
+                <button class="copy-btn" data-copy-target="w9-step2">Copiar</button>
+              </div>
+              <pre id="w9-step2">docker exec namenode /opt/hadoop-3.2.1/bin/hdfs dfs -mkdir -p /data
+docker exec namenode /opt/hadoop-3.2.1/bin/hdfs dfs -put -f /workshop/ai_student_impact_dataset.csv /data/
+docker exec namenode /opt/hadoop-3.2.1/bin/hdfs dfs -ls -h /data
+docker exec namenode sh -lc '/opt/hadoop-3.2.1/bin/hdfs dfs -head /data/ai_student_impact_dataset.csv | head -n 5'</pre>
+            </div>
+            <div class="result-box">
+              <strong>Debes ver:</strong> el archivo dentro de <code>/data</code> y las primeras filas del CSV al final.
+            </div>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">3</div>
+              <div>
+                <h3 class="step__title">Confirmación mínima para seguir</h3>
+                <p class="muted">Si esto sale bien, ya puedes pasar a Spark SQL.</p>
+              </div>
+            </div>
+            <ul class="plain-list">
+              <li>El clúster está levantado.</li>
+              <li>El archivo aparece en <code>/data</code>.</li>
+              <li><code>hdfs dfs -head</code> devuelve filas reales del CSV.</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section class="card" id="spark">
+        <h2>Paso a Paso de Spark SQL</h2>
+        <p class="section-intro">
+          A partir de aquí el objetivo ya no es MapReduce. El objetivo es leer el CSV desde HDFS con Spark y consultar con SQL.
+        </p>
+
+        <div class="step-list">
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">4</div>
+              <div>
+                <h3 class="step__title">Verifica que Hadoop siga levantado</h3>
+                <p class="muted">Haz esta comprobación antes de abrir Spark.</p>
+              </div>
+            </div>
+            <span class="context-tag">Terminal de VS Code</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">Comando</span>
+                <button class="copy-btn" data-copy-target="w9-step4">Copiar</button>
+              </div>
+              <pre id="w9-step4">docker ps</pre>
+            </div>
+            <div class="result-box">
+              <strong>Debes ver algo como:</strong> <code>namenode</code>, <code>datanode</code>, <code>resourcemanager</code>,
+              <code>nodemanager</code> e <code>historyserver</code>.
+            </div>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">5</div>
+              <div>
+                <h3 class="step__title">Verifica otra vez que el archivo está en HDFS</h3>
+                <p class="muted">Aquí entras a <code>namenode</code> y revisas desde dentro.</p>
+              </div>
+            </div>
+            <span class="context-tag">Terminal de tu computadora y luego contenedor</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">Comandos</span>
+                <button class="copy-btn" data-copy-target="w9-step5">Copiar</button>
+              </div>
+              <pre id="w9-step5">docker exec -it namenode bash
+
+hdfs dfs -ls -h /data
+hdfs dfs -head /data/ai_student_impact_dataset.csv</pre>
+            </div>
+            <div class="result-box">
+              <strong>Si aparece el archivo:</strong> ya puedes conectar Spark. Luego sal con <code>exit</code>.
+            </div>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">6</div>
+              <div>
+                <h3 class="step__title">Descarga la imagen de Spark con Python</h3>
+                <p class="muted">También conviene revisar el nombre de la red Docker donde vive Hadoop.</p>
+              </div>
+            </div>
+            <span class="context-tag">Terminal de tu computadora</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">Comandos</span>
+                <button class="copy-btn" data-copy-target="w9-step6">Copiar</button>
+              </div>
+              <pre id="w9-step6">docker pull apache/spark-py
+docker network ls</pre>
+            </div>
+            <div class="result-box">
+              <strong>Debes identificar:</strong> la red del proyecto. En este repositorio normalmente será
+              <code>hadoop_isil_default</code>.
+            </div>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">7</div>
+              <div>
+                <h3 class="step__title">Entra a PySpark dentro de la misma red de Hadoop</h3>
+                <p class="muted">Si la red tiene otro nombre, reemplázala.</p>
+              </div>
+            </div>
+            <span class="context-tag">Terminal de tu computadora</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">Comando</span>
+                <button class="copy-btn" data-copy-target="w9-step7">Copiar</button>
+              </div>
+              <pre id="w9-step7">docker run -it --rm \
+  --name spark-sql \
+  --network hadoop_isil_default \
+  apache/spark-py \
+  /opt/spark/bin/pyspark</pre>
+            </div>
+            <div class="result-box">
+              <strong>Con esto entras:</strong> a una consola interactiva de PySpark.
+            </div>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">8</div>
+              <div>
+                <h3 class="step__title">Crea la sesión Spark apuntando a HDFS</h3>
+                <p class="muted">Este bloque ya se ejecuta dentro de PySpark.</p>
+              </div>
+            </div>
+            <span class="context-tag">Dentro de PySpark</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">PySpark</span>
+                <button class="copy-btn" data-copy-target="w9-step8">Copiar</button>
+              </div>
+              <pre id="w9-step8">from pyspark.sql import SparkSession
+
+spark = SparkSession.builder \
+    .appName("ISIL_Spark_SQL") \
+    .config("spark.hadoop.fs.defaultFS", "hdfs://namenode:9000") \
+    .getOrCreate()</pre>
+            </div>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">9</div>
+              <div>
+                <h3 class="step__title">Lee el CSV desde HDFS</h3>
+                <p class="muted">Usa opciones seguras para evitar problemas de lectura.</p>
+              </div>
+            </div>
+            <span class="context-tag">Dentro de PySpark</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">PySpark</span>
+                <button class="copy-btn" data-copy-target="w9-step9">Copiar</button>
+              </div>
+              <pre id="w9-step9">df = spark.read \
+    .option("header", "true") \
+    .option("multiline", "true") \
+    .option("escape", '"') \
+    .csv("hdfs://namenode:9000/data/ai_student_impact_dataset.csv")
+
+df.printSchema()
+df.show(10, truncate=False)</pre>
+            </div>
+            <div class="result-box">
+              <strong>Debes ver:</strong> la estructura de columnas y luego las primeras 10 filas.
+            </div>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">10</div>
+              <div>
+                <h3 class="step__title">Crea la vista temporal y empieza con SQL</h3>
+                <p class="muted">Desde aquí ya trabajas como Spark SQL.</p>
+              </div>
+            </div>
+            <span class="context-tag">Dentro de PySpark</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">PySpark + SQL</span>
+                <button class="copy-btn" data-copy-target="w9-step10">Copiar</button>
+              </div>
+              <pre id="w9-step10">df.createOrReplaceTempView("personas")
+
+spark.sql("SELECT * FROM personas LIMIT 10").show(truncate=False)</pre>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="card" id="consultas">
+        <h2>Cuatro Consultas Siguientes sobre la Data</h2>
+        <p class="section-intro">
+          Después de confirmar que Spark ya leyó el CSV, puedes seguir con consultas SQL simples sobre la vista <code>personas</code>.
+        </p>
+        <div class="step-list">
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">11</div>
+              <div>
+                <h3 class="step__title">Contar registros totales</h3>
+              </div>
+            </div>
+            <span class="context-tag">Dentro de PySpark</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">SQL</span>
+                <button class="copy-btn" data-copy-target="w9-q1">Copiar</button>
+              </div>
+              <pre id="w9-q1">spark.sql("""
+SELECT COUNT(*) AS total_registros
+FROM personas
+""").show()</pre>
+            </div>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">12</div>
+              <div>
+                <h3 class="step__title">Contar estudiantes por categoría</h3>
+              </div>
+            </div>
+            <span class="context-tag">Dentro de PySpark</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">SQL</span>
+                <button class="copy-btn" data-copy-target="w9-q2">Copiar</button>
+              </div>
+              <pre id="w9-q2">spark.sql("""
+SELECT Major_Category, COUNT(*) AS total_estudiantes
+FROM personas
+GROUP BY Major_Category
+ORDER BY total_estudiantes DESC
+""").show(truncate=False)</pre>
+            </div>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">13</div>
+              <div>
+                <h3 class="step__title">Promedio de GPA antes y después</h3>
+              </div>
+            </div>
+            <span class="context-tag">Dentro de PySpark</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">SQL</span>
+                <button class="copy-btn" data-copy-target="w9-q3">Copiar</button>
+              </div>
+              <pre id="w9-q3">spark.sql("""
+SELECT
+  ROUND(AVG(CAST(Pre_Semester_GPA AS DOUBLE)), 3) AS promedio_pre_gpa,
+  ROUND(AVG(CAST(Post_Semester_GPA AS DOUBLE)), 3) AS promedio_post_gpa
+FROM personas
+""").show(truncate=False)</pre>
+            </div>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">14</div>
+              <div>
+                <h3 class="step__title">Horas promedio de uso de GenAI por categoría</h3>
+              </div>
+            </div>
+            <span class="context-tag">Dentro de PySpark</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">SQL</span>
+                <button class="copy-btn" data-copy-target="w9-q4">Copiar</button>
+              </div>
+              <pre id="w9-q4">spark.sql("""
+SELECT
+  Major_Category,
+  ROUND(AVG(CAST(Weekly_GenAI_Hours AS DOUBLE)), 2) AS promedio_horas_genai
+FROM personas
+GROUP BY Major_Category
+ORDER BY promedio_horas_genai DESC
+""").show(truncate=False)</pre>
+            </div>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">15</div>
+              <div>
+                <h3 class="step__title">Top 10 estudiantes con más horas de GenAI</h3>
+              </div>
+            </div>
+            <span class="context-tag">Dentro de PySpark</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">SQL</span>
+                <button class="copy-btn" data-copy-target="w9-q5">Copiar</button>
+              </div>
+              <pre id="w9-q5">spark.sql("""
+SELECT
+  Student_ID,
+  Major_Category,
+  Weekly_GenAI_Hours,
+  Primary_Use_Case
+FROM personas
+ORDER BY CAST(Weekly_GenAI_Hours AS DOUBLE) DESC
+LIMIT 10
+""").show(truncate=False)</pre>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="card" id="errores">
+        <h2>Errores Comunes</h2>
+        <p class="section-intro">
+          Antes de asumir que Spark está mal, revisa primero estas causas frecuentes.
+        </p>
+        <div class="mini-grid">
+          <article class="mini-card">
+            <h3>No aparece el archivo en HDFS</h3>
+            <p>No sigas con Spark. Primero vuelve al bloque de carga en <code>/data</code>.</p>
+          </article>
+          <article class="mini-card">
+            <h3>La red Docker no coincide</h3>
+            <p>Revisa <code>docker network ls</code> y usa el nombre real en <code>docker run</code>.</p>
+          </article>
+          <article class="mini-card">
+            <h3>Spark no encuentra namenode</h3>
+            <p>Casi siempre significa que el contenedor de Spark no entró a la misma red que Hadoop.</p>
+          </article>
+          <article class="mini-card">
+            <h3>El CSV carga raro</h3>
+            <p>Usa las opciones <code>header</code>, <code>multiline</code> y <code>escape</code> tal como están en esta guía.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Idea Principal de Semana 9</h2>
+        <p class="section-intro">
+          Primero confirmas que HDFS ya tiene el dataset. Luego conectas Spark a ese mismo HDFS y consultas el CSV con SQL.
+        </p>
+        <div class="highlight">
+          <strong>Resumen:</strong> Hadoop sigue siendo el almacenamiento distribuido y Spark SQL se convierte en la capa de consulta sobre
+          <code>ai_student_impact_dataset.csv</code>.
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    Semana 9 - Spark SQL conectado a Hadoop y leyendo datos desde HDFS.
+  </footer>
+
+  <script>
+    const copyButtons = document.querySelectorAll(".copy-btn");
+
+    copyButtons.forEach((button) => {
+      button.addEventListener("click", async () => {
+        const targetId = button.getAttribute("data-copy-target");
+        const codeElement = document.getElementById(targetId);
+
+        if (!codeElement) {
+          return;
+        }
+
+        try {
+          await navigator.clipboard.writeText(codeElement.innerText.trim());
+          const previousLabel = button.textContent;
+          button.textContent = "Copiado";
+          setTimeout(() => {
+            button.textContent = previousLabel;
+          }, 1400);
+        } catch (error) {
+          button.textContent = "No se pudo copiar";
+          setTimeout(() => {
+            button.textContent = "Copiar";
+          }, 1800);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
