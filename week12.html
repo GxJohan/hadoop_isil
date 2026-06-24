@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Semana 12 - WordCount con Hadoop MapReduce</title>
+  <style>
+    :root {
+      --bg: #f4fbff;
+      --primary: #00a6d6;
+      --primary-dark: #0077a3;
+      --primary-soft: #dff6ff;
+      --text: #1f2937;
+      --muted: #4b5563;
+      --card: #ffffff;
+      --border: #bfe9f5;
+      --code-bg: #0f172a;
+      --code-text: #e0f2fe;
+      --success: #0f766e;
+      --warning: #b45309;
+      --shadow: 0 18px 45px rgba(0, 119, 163, 0.12);
+      --radius-lg: 24px;
+      --radius-md: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      overflow-x: hidden;
+    }
+
+    body {
+      margin: 0;
+      overflow-x: hidden;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(0, 166, 214, 0.15), transparent 28%),
+        radial-gradient(circle at top right, rgba(0, 119, 163, 0.12), transparent 24%),
+        linear-gradient(180deg, #ffffff 0%, var(--bg) 28%, var(--bg) 100%);
+      font-family: "Trebuchet MS", "Segoe UI", Verdana, sans-serif;
+      line-height: 1.65;
+    }
+
+    .container {
+      width: min(1000px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .hero {
+      padding: 48px 0 32px;
+    }
+
+    .hero__panel,
+    .card {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(191, 233, 245, 0.95);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .hero__panel {
+      padding: 34px;
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      font-size: 0.94rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--primary-dark);
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin-top: 0;
+      color: #0f3351;
+      font-family: Georgia, "Times New Roman", serif;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      line-height: 1.1;
+      margin-bottom: 14px;
+    }
+
+    .subtitle,
+    .section-intro,
+    .muted {
+      color: var(--muted);
+    }
+
+    .hero__badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .logo-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .logo-card {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 120px;
+      padding: 16px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, #ffffff 0%, #f8fdff 100%);
+    }
+
+    .logo-card img {
+      max-width: 100%;
+      max-height: 72px;
+      height: auto;
+      display: block;
+      object-fit: contain;
+    }
+
+    .badge,
+    .context-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: var(--primary-soft);
+      border: 1px solid var(--border);
+      color: var(--primary-dark);
+      font-weight: 700;
+      font-size: 0.92rem;
+    }
+
+    .quick-nav {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(244, 251, 255, 0.92);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid rgba(191, 233, 245, 0.85);
+    }
+
+    .quick-nav__inner {
+      width: min(1000px, calc(100% - 32px));
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 14px 0;
+    }
+
+    .quick-nav a {
+      text-decoration: none;
+      color: var(--primary-dark);
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 0.92rem;
+      font-weight: 700;
+    }
+
+    main {
+      padding: 28px 0 52px;
+    }
+
+    .stack,
+    .step-list,
+    .mini-grid {
+      display: grid;
+      gap: 22px;
+    }
+
+    .card {
+      padding: 28px;
+    }
+
+    .mini-grid {
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .mini-card,
+    .step {
+      padding: 18px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, #ffffff 0%, #f8fdff 100%);
+    }
+
+    .highlight {
+      border-left: 5px solid var(--primary);
+      background: var(--primary-soft);
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      color: #0d425c;
+    }
+
+    .warning-box {
+      border-left: 5px solid #f59e0b;
+      background: #fff7ed;
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      color: #7c2d12;
+    }
+
+    .step__head {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      margin-bottom: 14px;
+    }
+
+    .step__number {
+      flex: 0 0 auto;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: #ffffff;
+      font-weight: 800;
+    }
+
+    .step__title {
+      margin: 0;
+      font-size: 1.28rem;
+    }
+
+    .code-block {
+      position: relative;
+      margin: 14px 0 0;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: var(--code-bg);
+    }
+
+    .code-block__bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      background: rgba(15, 23, 42, 0.82);
+      border-bottom: 1px solid rgba(224, 242, 254, 0.12);
+    }
+
+    .code-label {
+      color: #bae6fd;
+      font-size: 0.84rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .copy-btn {
+      appearance: none;
+      border: 1px solid rgba(224, 242, 254, 0.28);
+      background: rgba(14, 165, 233, 0.18);
+      color: #e0f2fe;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 0.86rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    pre {
+      margin: 0;
+      padding: 18px;
+      overflow-x: auto;
+      color: var(--code-text);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    code,
+    pre {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    }
+
+    .result-box {
+      margin-top: 16px;
+      padding: 16px;
+      border-radius: var(--radius-md);
+      border: 1px solid #bae6fd;
+      background: linear-gradient(180deg, #effbff 0%, #f8feff 100%);
+    }
+
+    .result-box strong {
+      color: var(--success);
+    }
+
+    .plain-list {
+      margin: 10px 0 0;
+      padding-left: 18px;
+    }
+
+    .plain-list li {
+      margin-bottom: 8px;
+    }
+
+    footer {
+      padding: 0 0 36px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 0.95rem;
+    }
+
+    @media (max-width: 760px) {
+      .hero__panel,
+      .card {
+        padding: 22px;
+      }
+
+      .quick-nav__inner {
+        justify-content: center;
+      }
+
+      .code-block__bar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .copy-btn {
+        width: 100%;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="container">
+      <div class="hero__panel">
+        <p class="eyebrow">Curso de Big Data - ISIL</p>
+        <h1>Semana 12 - WordCount con Hadoop MapReduce</h1>
+        <p class="subtitle">
+          Guía práctica para ejecutar <code>WordCount</code> con Hadoop y Docker usando el archivo
+          <code>comentarios.txt</code>, cargándolo a <code>HDFS</code>, procesándolo con
+          <code>MapReduce</code> y validando el resultado desde <code>YARN</code>.
+        </p>
+        <div class="hero__badges">
+          <span class="badge">Semana 12</span>
+          <span class="badge">Tema principal: WordCount</span>
+          <span class="badge">Hadoop + Docker + HDFS</span>
+          <span class="badge">MapReduce + YARN</span>
+        </div>
+        <div class="logo-strip" aria-label="Logos oficiales">
+          <div class="logo-card">
+            <img
+              src="https://hadoop.apache.org/hadoop-logo.jpg"
+              alt="Logo oficial de Apache Hadoop"
+              loading="lazy"
+              referrerpolicy="no-referrer"
+            >
+          </div>
+          <div class="logo-card">
+            <img
+              src="https://www.docker.com/wp-content/uploads/2022/03/Moby-logo.png"
+              alt="Logo oficial de Docker"
+              loading="lazy"
+              referrerpolicy="no-referrer"
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <nav class="quick-nav" aria-label="Navegación rápida">
+    <div class="quick-nav__inner">
+      <a href="#objetivo">Objetivo</a>
+      <a href="#pasos">Paso a paso</a>
+      <a href="#resultado">Resultado</a>
+      <a href="#yarn">YARN</a>
+      <a href="#cierre">Cierre</a>
+    </div>
+  </nav>
+
+  <main>
+    <div class="container stack">
+      <section class="card" id="objetivo">
+        <h2>Objetivo</h2>
+        <p class="section-intro">
+          Procesar un archivo de texto en Hadoop para contar cuántas veces aparece cada palabra.
+        </p>
+        <div class="highlight">
+          <strong>Flujo de la práctica:</strong> <code>comentarios.txt</code> → <code>HDFS</code> →
+          <code>MapReduce WordCount</code> → <code>resultado</code> → <code>YARN</code>.
+        </div>
+        <div class="mini-grid" style="margin-top: 16px;">
+          <article class="mini-card">
+            <h3>Ingestión</h3>
+            <p>Primero se crea el archivo y se sube a <code>HDFS</code>.</p>
+          </article>
+          <article class="mini-card">
+            <h3>Procesamiento</h3>
+            <p>Luego Hadoop ejecuta <code>WordCount</code> con <code>MapReduce</code>.</p>
+          </article>
+          <article class="mini-card">
+            <h3>Validación</h3>
+            <p>Al final se consulta la salida en <code>HDFS</code>.</p>
+          </article>
+          <article class="mini-card">
+            <h3>Monitoreo</h3>
+            <p>La ejecución se revisa en <code>YARN</code> desde el navegador.</p>
+          </article>
+        </div>
+        <div class="warning-box" style="margin-top: 16px;">
+          <strong>Idea de sesión:</strong> aunque el archivo es pequeño, el flujo replica el mismo modelo que se usa
+          en proyectos Big Data reales: ingreso de datos, procesamiento distribuido, salida y revisión operacional.
+        </div>
+      </section>
+
+      <section class="card" id="pasos">
+        <h2>Paso a Paso de la Práctica</h2>
+        <p class="section-intro">
+          Sigue exactamente este orden para levantar Hadoop, cargar el texto y ejecutar WordCount.
+        </p>
+
+        <div class="step-list">
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">1</div>
+              <div>
+                <h3 class="step__title">Levantar Hadoop con Docker</h3>
+                <p class="muted">Hazlo desde la carpeta raíz del proyecto.</p>
+              </div>
+            </div>
+            <span class="context-tag">Terminal de tu computadora</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">Comandos</span>
+                <button class="copy-btn" data-copy-target="w12-step1">Copiar</button>
+              </div>
+              <pre id="w12-step1">docker compose -f docker-compose.week7.yml up --build -d
+docker compose -f docker-compose.week7.yml ps</pre>
+            </div>
+            <div class="result-box">
+              <strong>Debes verificar:</strong> que los servicios del clúster estén activos antes de continuar.
+            </div>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">2</div>
+              <div>
+                <h3 class="step__title">Entrar al contenedor namenode</h3>
+                <p class="muted">Desde aquí trabajarás con HDFS y el archivo de texto.</p>
+              </div>
+            </div>
+            <span class="context-tag">Terminal de tu computadora</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">Comando</span>
+                <button class="copy-btn" data-copy-target="w12-step2">Copiar</button>
+              </div>
+              <pre id="w12-step2">docker exec -it namenode bash</pre>
+            </div>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">3</div>
+              <div>
+                <h3 class="step__title">Crear el archivo comentarios.txt</h3>
+                <p class="muted">Usa exactamente este contenido dentro del contenedor.</p>
+              </div>
+            </div>
+            <span class="context-tag">Dentro del contenedor namenode</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">Texto y verificación</span>
+                <button class="copy-btn" data-copy-target="w12-step3">Copiar</button>
+              </div>
+              <pre id="w12-step3">cat &gt; comentarios.txt &lt;&lt; 'EOF'
+java dificil
+java interesante
+hadoop dificil
+docker util
+big data interesante
+java util
+hadoop docker
+datos datos datos
+EOF
+
+cat comentarios.txt</pre>
+            </div>
+            <div class="result-box">
+              <strong>Debes ver:</strong> las 8 líneas del archivo impresas en pantalla.
+            </div>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">4</div>
+              <div>
+                <h3 class="step__title">Crear la carpeta de entrada en HDFS</h3>
+                <p class="muted">Aquí defines la ruta donde Hadoop leerá el archivo.</p>
+              </div>
+            </div>
+            <span class="context-tag">Dentro del contenedor namenode</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">HDFS</span>
+                <button class="copy-btn" data-copy-target="w12-step4">Copiar</button>
+              </div>
+              <pre id="w12-step4">hdfs dfs -mkdir -p /user/root/input</pre>
+            </div>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">5</div>
+              <div>
+                <h3 class="step__title">Subir el archivo a HDFS</h3>
+                <p class="muted">Después verifica tanto la ruta como el contenido.</p>
+              </div>
+            </div>
+            <span class="context-tag">Dentro del contenedor namenode</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">HDFS</span>
+                <button class="copy-btn" data-copy-target="w12-step5">Copiar</button>
+              </div>
+              <pre id="w12-step5">hdfs dfs -put -f comentarios.txt /user/root/input/
+hdfs dfs -ls /user/root/input
+hdfs dfs -cat /user/root/input/comentarios.txt</pre>
+            </div>
+            <div class="result-box">
+              <strong>Debes confirmar:</strong> que <code>comentarios.txt</code> ya vive dentro de <code>HDFS</code>.
+            </div>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">6</div>
+              <div>
+                <h3 class="step__title">Eliminar la salida anterior si existe</h3>
+                <p class="muted">WordCount no sobrescribe carpetas de salida existentes.</p>
+              </div>
+            </div>
+            <span class="context-tag">Dentro del contenedor namenode</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">Limpieza</span>
+                <button class="copy-btn" data-copy-target="w12-step6">Copiar</button>
+              </div>
+              <pre id="w12-step6">hdfs dfs -rm -r -f /user/root/output</pre>
+            </div>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">7</div>
+              <div>
+                <h3 class="step__title">Ejecutar WordCount con MapReduce</h3>
+                <p class="muted">Prueba primero la ruta genérica y usa la segunda si tu imagen lo requiere.</p>
+              </div>
+            </div>
+            <span class="context-tag">Dentro del contenedor namenode</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">MapReduce</span>
+                <button class="copy-btn" data-copy-target="w12-step7">Copiar</button>
+              </div>
+              <pre id="w12-step7">hadoop jar /opt/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-examples-*.jar wordcount /user/root/input /user/root/output
+
+hadoop jar /opt/hadoop-3.2.1/share/hadoop/mapreduce/hadoop-mapreduce-examples-3.2.1.jar wordcount /user/root/input /user/root/output</pre>
+            </div>
+            <div class="result-box">
+              <strong>Idea clave:</strong> <code>WordCount</code> es el ejemplo clásico para entender cómo
+              <code>MapReduce</code> separa, agrupa y cuenta datos por lotes.
+            </div>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">8</div>
+              <div>
+                <h3 class="step__title">Ver el resultado generado</h3>
+                <p class="muted">La salida final queda en la carpeta <code>/user/root/output</code> de HDFS.</p>
+              </div>
+            </div>
+            <span class="context-tag">Dentro del contenedor namenode</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">Resultado</span>
+                <button class="copy-btn" data-copy-target="w12-step8">Copiar</button>
+              </div>
+              <pre id="w12-step8">hdfs dfs -cat /user/root/output/part-r-00000</pre>
+            </div>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">9</div>
+              <div>
+                <h3 class="step__title">Revisar la ejecución en YARN</h3>
+                <p class="muted">Abre el panel desde el navegador para validar el job.</p>
+              </div>
+            </div>
+            <span class="context-tag">Navegador</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">URL</span>
+                <button class="copy-btn" data-copy-target="w12-step9">Copiar</button>
+              </div>
+              <pre id="w12-step9">http://localhost:8088</pre>
+            </div>
+            <div class="result-box">
+              <strong>Explicación para alumnos:</strong> YARN permite revisar si el proceso se ejecutó correctamente,
+              cuánto demoró y en qué estado terminó.
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="card" id="resultado">
+        <h2>Resultado Esperado</h2>
+        <p class="section-intro">
+          Si el flujo salió bien, este debe ser el contenido del archivo de salida principal.
+        </p>
+        <div class="code-block">
+          <div class="code-block__bar">
+            <span class="code-label">Salida esperada</span>
+            <button class="copy-btn" data-copy-target="w12-result">Copiar</button>
+          </div>
+          <pre id="w12-result">big	1
+data	1
+datos	3
+dificil	2
+docker	2
+hadoop	2
+interesante	2
+java	3
+util	2</pre>
+        </div>
+        <div class="highlight" style="margin-top: 16px;">
+          <strong>Lectura rápida:</strong> las palabras que más se repiten son <code>datos</code> y <code>java</code>,
+          por eso aparecen con los conteos más altos.
+        </div>
+      </section>
+
+      <section class="card" id="yarn">
+        <h2>Qué se Aprende con WordCount y YARN</h2>
+        <p class="section-intro">
+          Esta práctica no solo cuenta palabras. También enseña el flujo completo de ejecución distribuida dentro de Hadoop.
+        </p>
+        <div class="mini-grid">
+          <article class="mini-card">
+            <h3>WordCount</h3>
+            <p>Muestra cómo Hadoop divide datos, los procesa en paralelo y consolida el resultado final.</p>
+          </article>
+          <article class="mini-card">
+            <h3>HDFS</h3>
+            <p>Permite guardar datos de forma distribuida para que los jobs puedan leerlos desde el clúster.</p>
+          </article>
+          <article class="mini-card">
+            <h3>MapReduce</h3>
+            <p>Ejecuta procesamiento por lotes, ideal para grandes volúmenes de información histórica.</p>
+          </article>
+          <article class="mini-card">
+            <h3>YARN</h3>
+            <p>Administra recursos, estados de ejecución y revisión de logs de las aplicaciones del ecosistema Hadoop.</p>
+          </article>
+        </div>
+        <div class="warning-box" style="margin-top: 16px;">
+          <strong>Importancia en proyectos reales:</strong> Hadoop sigue siendo relevante cuando una organización necesita
+          almacenar y procesar grandes volúmenes de datos con tolerancia a fallos, ejecución distribuida y trazabilidad operacional.
+        </div>
+      </section>
+
+      <section class="card" id="cierre">
+        <h2>Cierre para Explicar en Clase</h2>
+        <p class="section-intro">
+          Puedes usar este mensaje final para conectar la práctica con escenarios reales.
+        </p>
+        <div class="highlight">
+          <strong>Texto sugerido:</strong> “Aunque el archivo es pequeño, el flujo es el mismo que se usaría con millones
+          de registros: primero ingresamos datos a HDFS, luego MapReduce los procesa y finalmente revisamos los resultados generados.”
+        </div>
+        <h3 style="margin-top: 22px;">Preguntas Finales</h3>
+        <ul class="plain-list">
+          <li>¿Qué archivo subimos a HDFS?</li>
+          <li>¿Qué hizo MapReduce en esta práctica de WordCount?</li>
+          <li>¿Qué palabra apareció más veces?</li>
+          <li>¿Dónde vimos el resultado final?</li>
+          <li>¿Qué función cumple YARN dentro del proceso?</li>
+          <li>¿Este procesamiento es por lotes o en tiempo real?</li>
+        </ul>
+        <div class="result-box">
+          <strong>Respuesta conceptual clave:</strong> esta práctica corresponde a <code>procesamiento por lotes</code>,
+          porque Hadoop toma un conjunto de datos ya cargado, ejecuta el job completo y luego entrega la salida final.
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    Semana 12 - Práctica de WordCount con Hadoop, HDFS, MapReduce, Docker y YARN.
+  </footer>
+
+  <script>
+    const copyButtons = document.querySelectorAll(".copy-btn");
+
+    copyButtons.forEach((button) => {
+      button.addEventListener("click", async () => {
+        const targetId = button.getAttribute("data-copy-target");
+        const codeElement = document.getElementById(targetId);
+
+        if (!codeElement) {
+          return;
+        }
+
+        try {
+          await navigator.clipboard.writeText(codeElement.innerText.trim());
+          const previousLabel = button.textContent;
+          button.textContent = "Copiado";
+          setTimeout(() => {
+            button.textContent = previousLabel;
+          }, 1400);
+        } catch (error) {
+          button.textContent = "No se pudo copiar";
+          setTimeout(() => {
+            button.textContent = "Copiar";
+          }, 1800);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
