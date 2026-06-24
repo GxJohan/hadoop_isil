@@ -390,6 +390,7 @@
       <a href="#resultado">Resultado</a>
       <a href="#yarn">YARN</a>
       <a href="#cierre">Cierre</a>
+      <a href="#desafio">Desafío grupal</a>
     </div>
   </nav>
 
@@ -708,6 +709,136 @@ util	2</pre>
         <div class="result-box">
           <strong>Respuesta conceptual clave:</strong> esta práctica corresponde a <code>procesamiento por lotes</code>,
           porque Hadoop toma un conjunto de datos ya cargado, ejecuta el job completo y luego entrega la salida final.
+        </div>
+      </section>
+
+      <section class="card" id="desafio">
+        <h2>Desafío Grupal</h2>
+        <p class="section-intro">
+          Para una versión más presentable en clase, el reto es repetir la práctica usando el archivo
+          <code>comentarios_1000.txt</code> en lugar del archivo pequeño de 8 líneas.
+        </p>
+        <div class="highlight">
+          <strong>Meta del desafío:</strong> ejecutar el mismo flujo de <code>WordCount</code> pero con un archivo
+          más grande para observar mejor el uso de <code>HDFS</code>, <code>MapReduce</code> y <code>YARN</code>.
+        </div>
+
+        <div class="step-list" style="margin-top: 22px;">
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">1</div>
+              <div>
+                <h3 class="step__title">Copiar el archivo al contenedor</h3>
+                <p class="muted">Hazlo desde la carpeta donde tengas <code>comentarios_1000.txt</code>.</p>
+              </div>
+            </div>
+            <span class="context-tag">Terminal de tu computadora</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">Copia al contenedor</span>
+                <button class="copy-btn" data-copy-target="w12-group1">Copiar</button>
+              </div>
+              <pre id="w12-group1">docker cp comentarios_1000.txt namenode:/comentarios_1000.txt</pre>
+            </div>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">2</div>
+              <div>
+                <h3 class="step__title">Entrar al contenedor namenode</h3>
+                <p class="muted">Desde aquí validarás el archivo antes de subirlo a HDFS.</p>
+              </div>
+            </div>
+            <span class="context-tag">Terminal de tu computadora</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">Acceso</span>
+                <button class="copy-btn" data-copy-target="w12-group2">Copiar</button>
+              </div>
+              <pre id="w12-group2">docker exec -it namenode bash</pre>
+            </div>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">3</div>
+              <div>
+                <h3 class="step__title">Verificar que el archivo existe</h3>
+                <p class="muted">Basta con revisar las primeras líneas.</p>
+              </div>
+            </div>
+            <span class="context-tag">Dentro del contenedor namenode</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">Validación</span>
+                <button class="copy-btn" data-copy-target="w12-group3">Copiar</button>
+              </div>
+              <pre id="w12-group3">cat /comentarios_1000.txt | head</pre>
+            </div>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">4</div>
+              <div>
+                <h3 class="step__title">Subir el archivo grande a HDFS</h3>
+                <p class="muted">Reutiliza la misma ruta de entrada usada en la práctica base.</p>
+              </div>
+            </div>
+            <span class="context-tag">Dentro del contenedor namenode</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">HDFS</span>
+                <button class="copy-btn" data-copy-target="w12-group4">Copiar</button>
+              </div>
+              <pre id="w12-group4">hdfs dfs -mkdir -p /user/root/input
+hdfs dfs -put -f /comentarios_1000.txt /user/root/input/
+hdfs dfs -ls /user/root/input</pre>
+            </div>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">5</div>
+              <div>
+                <h3 class="step__title">Ejecutar WordCount sobre comentarios_1000.txt</h3>
+                <p class="muted">Limpia la salida anterior y vuelve a correr el job.</p>
+              </div>
+            </div>
+            <span class="context-tag">Dentro del contenedor namenode</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">MapReduce</span>
+                <button class="copy-btn" data-copy-target="w12-group5">Copiar</button>
+              </div>
+              <pre id="w12-group5">hdfs dfs -rm -r -f /user/root/output
+hadoop jar /opt/hadoop-3.2.1/share/hadoop/mapreduce/hadoop-mapreduce-examples-3.2.1.jar wordcount /user/root/input /user/root/output</pre>
+            </div>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">6</div>
+              <div>
+                <h3 class="step__title">Revisar el resultado final</h3>
+                <p class="muted">La salida seguirá apareciendo en el archivo principal del job.</p>
+              </div>
+            </div>
+            <span class="context-tag">Dentro del contenedor namenode</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">Resultado</span>
+                <button class="copy-btn" data-copy-target="w12-group6">Copiar</button>
+              </div>
+              <pre id="w12-group6">hdfs dfs -cat /user/root/output/part-r-00000</pre>
+            </div>
+          </article>
+        </div>
+
+        <div class="warning-box" style="margin-top: 18px;">
+          <strong>Reto para el grupo:</strong> comparen el tiempo de ejecución, la cantidad de palabras distintas y las
+          palabras más frecuentes entre <code>comentarios.txt</code> y <code>comentarios_1000.txt</code>.
         </div>
       </section>
     </div>
