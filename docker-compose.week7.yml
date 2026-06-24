@@ -38,6 +38,8 @@ services:
     image: hadoop_isil/week7-resourcemanager:3.2.1-python3
     container_name: resourcemanager
     restart: always
+    ports:
+      - 8088:8088
     environment:
       SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode:9864"
     env_file:
