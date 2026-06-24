@@ -389,7 +389,7 @@
       <a href="#pasos">Paso a paso</a>
       <a href="#resultado">Resultado</a>
       <a href="#yarn">YARN</a>
-      <a href="#cierre">Cierre</a>
+      <a href="#cierre">Conclusión</a>
       <a href="#desafio">Desafío grupal</a>
     </div>
   </nav>
@@ -424,7 +424,7 @@
           </article>
         </div>
         <div class="warning-box" style="margin-top: 16px;">
-          <strong>Idea de sesión:</strong> aunque el archivo es pequeño, el flujo replica el mismo modelo que se usa
+          <strong>Por qué importa:</strong> aunque el archivo es pequeño, el flujo replica el mismo modelo que se usa
           en proyectos Big Data reales: ingreso de datos, procesamiento distribuido, salida y revisión operacional.
         </div>
       </section>
@@ -626,7 +626,7 @@ hadoop jar /opt/hadoop-3.2.1/share/hadoop/mapreduce/hadoop-mapreduce-examples-3.
               <pre id="w12-step9">http://localhost:8088</pre>
             </div>
             <div class="result-box">
-              <strong>Explicación para alumnos:</strong> YARN permite revisar si el proceso se ejecutó correctamente,
+              <strong>Qué debes revisar:</strong> YARN permite confirmar si el proceso se ejecutó correctamente,
               cuánto demoró y en qué estado terminó.
             </div>
           </article>
@@ -660,9 +660,9 @@ util	2</pre>
       </section>
 
       <section class="card" id="yarn">
-        <h2>Qué se Aprende con WordCount y YARN</h2>
+        <h2>Qué aprendes con WordCount y YARN</h2>
         <p class="section-intro">
-          Esta práctica no solo cuenta palabras. También enseña el flujo completo de ejecución distribuida dentro de Hadoop.
+          Esta práctica no solo cuenta palabras. También te enseña el flujo completo de ejecución distribuida dentro de Hadoop.
         </p>
         <div class="mini-grid">
           <article class="mini-card">
@@ -689,15 +689,15 @@ util	2</pre>
       </section>
 
       <section class="card" id="cierre">
-        <h2>Cierre para Explicar en Clase</h2>
+        <h2>Conclusión</h2>
         <p class="section-intro">
-          Puedes usar este mensaje final para conectar la práctica con escenarios reales.
+          Esta práctica usa un archivo pequeño, pero el flujo es el mismo que se aplica cuando se trabaja con grandes volúmenes de datos.
         </p>
         <div class="highlight">
-          <strong>Texto sugerido:</strong> “Aunque el archivo es pequeño, el flujo es el mismo que se usaría con millones
-          de registros: primero ingresamos datos a HDFS, luego MapReduce los procesa y finalmente revisamos los resultados generados.”
+          <strong>Idea clave:</strong> primero ingresas datos a <code>HDFS</code>, luego <code>MapReduce</code> los procesa
+          y finalmente revisas los resultados generados.
         </div>
-        <h3 style="margin-top: 22px;">Preguntas Finales</h3>
+        <h3 style="margin-top: 22px;">Preguntas de repaso</h3>
         <ul class="plain-list">
           <li>¿Qué archivo subimos a HDFS?</li>
           <li>¿Qué hizo MapReduce en esta práctica de WordCount?</li>
@@ -707,7 +707,7 @@ util	2</pre>
           <li>¿Este procesamiento es por lotes o en tiempo real?</li>
         </ul>
         <div class="result-box">
-          <strong>Respuesta conceptual clave:</strong> esta práctica corresponde a <code>procesamiento por lotes</code>,
+          <strong>Recuerda:</strong> esta práctica corresponde a <code>procesamiento por lotes</code>,
           porque Hadoop toma un conjunto de datos ya cargado, ejecuta el job completo y luego entrega la salida final.
         </div>
       </section>
@@ -715,11 +715,11 @@ util	2</pre>
       <section class="card" id="desafio">
         <h2>Desafío Grupal</h2>
         <p class="section-intro">
-          Para una versión más presentable en clase, el reto es repetir la práctica usando el archivo
+          El reto es repetir la práctica usando el archivo
           <code>comentarios_1000.txt</code> en lugar del archivo pequeño de 8 líneas.
         </p>
         <div class="highlight">
-          <strong>Meta del desafío:</strong> ejecutar el mismo flujo de <code>WordCount</code> pero con un archivo
+          <strong>Objetivo del desafío:</strong> ejecutar el mismo flujo de <code>WordCount</code> pero con un archivo
           más grande para observar mejor el uso de <code>HDFS</code>, <code>MapReduce</code> y <code>YARN</code>.
         </div>
 
@@ -837,7 +837,7 @@ hadoop jar /opt/hadoop-3.2.1/share/hadoop/mapreduce/hadoop-mapreduce-examples-3.
         </div>
 
         <div class="warning-box" style="margin-top: 18px;">
-          <strong>Reto para el grupo:</strong> comparen el tiempo de ejecución, la cantidad de palabras distintas y las
+          <strong>Si trabajas en grupo:</strong> comparen el tiempo de ejecución, la cantidad de palabras distintas y las
           palabras más frecuentes entre <code>comentarios.txt</code> y <code>comentarios_1000.txt</code>.
         </div>
       </section>
