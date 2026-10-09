@@ -1,114 +1,95 @@
 SEMANA 5 Y 6 - HADOOP CON DOCKER
 ISIL - CURSO DE BIG DATA
 
-REPOSITORIO BASE DEL CURSO
+GUIA PASO A PASO (VERSION OFICIAL):
+https://gxjohan.github.io/hadoop_isil/
 
-https://github.com/GxJohan/hadoop_isil
+META: subir datos_200mb.csv a HDFS y verlo en http://localhost:9870, carpeta /data
 
-ESTRUCTURA ESPERADA
+ANTES DE EMPEZAR
 
-hadoop_isil/
-├── docker-hadoop/
-├── datos_200mb.csv
-├── README.md
-├── index.html
-└── comandos-hadoop.txt
+- Windows: usa la terminal de Ubuntu (WSL) para todo.
+- Mac: usa la app Terminal o la terminal de VS Code.
+- Docker Desktop debe estar abierto.
+- datos_200mb.csv NO viene en el repositorio. Descargalo de
+  https://examplefile.com/code/csv/200-mb-csv
+  ponlo en la carpeta hadoop_isil y renombralo a datos_200mb.csv
 
-REGLA IMPORTANTE
+COMO SABER DONDE ESTOY (mira el inicio de la linea)
 
-Si el comando inicia con docker, normalmente se ejecuta desde tu computadora.
-Si el comando inicia con hdfs dfs, normalmente se ejecuta dentro del contenedor namenode.
+- Terminal de tu PC:            alumno@pc:~/hadoop_isil$   -> comandos git, cd, ls, docker
+- Dentro del contenedor:        root@a1b2c3d4e5f6:/#       -> comandos hdfs dfs
+- Navegador:                    solo miras el resultado
 
-A. DESDE TU COMPUTADORA - CLONAR REPOSITORIO BASE Y ABRIR VS CODE
 
-git clone https://github.com/GxJohan/hadoop_isil.git
-cd hadoop_isil
-code .
+=============== TERMINAL DE TU PC ===============
 
-B. DESDE TU COMPUTADORA - VERIFICAR DOCKER
+PASO 1 - Verificar Docker
 
 docker --version
 docker compose version
 docker ps
 
-C. DESDE TU COMPUTADORA - DESCARGAR EL ENTORNO HADOOP
+PASO 2 - Clonar el repositorio del curso y abrirlo en VS Code
+
+cd ~
+git clone https://github.com/GxJohan/hadoop_isil.git
+cd hadoop_isil
+code .
+
+PASO 3 - Descargar el entorno Hadoop (dentro de hadoop_isil)
 
 git clone https://github.com/big-data-europe/docker-hadoop.git
-cd docker-hadoop
+ls
 
-D. DESDE TU COMPUTADORA - LEVANTAR HADOOP
-Estando dentro de hadoop_isil/docker-hadoop:
-
-docker compose up -d
-docker ps
-
-E. DESDE TU COMPUTADORA - VERIFICAR NOMBRE DEL CSV PESADO
-
-Archivo descargado desde:
-https://examplefile.com/code/csv/200-mb-csv
-
-Mac / Linux:
+PASO 4 - Comprobar que datos_200mb.csv esta en hadoop_isil (debe decir 200M)
 
 ls -lh
 
-Windows PowerShell:
+PASO 5 - Levantar Hadoop (espera 1 minuto despues)
 
-dir
+cd docker-hadoop
+docker compose up -d
+docker ps
 
-Si tiene otro nombre, renombrar:
+PASO 6 - NAVEGADOR: abrir http://localhost:9870
+         Debe decir: Overview 'namenode:9000' (active)
 
-Mac / Linux:
+PASO 7 - Copiar el CSV al contenedor (volvemos a hadoop_isil)
 
-mv nombre_original.csv datos_200mb.csv
-
-Windows PowerShell:
-
-ren nombre_original.csv datos_200mb.csv
-
-F. DESDE TU COMPUTADORA - COPIAR CSV PESADO AL CONTENEDOR
-
-Si estas en hadoop_isil:
-
+cd ..
 docker cp datos_200mb.csv namenode:/tmp/datos_200mb.csv
+docker exec namenode ls -lh /tmp/datos_200mb.csv
+
+PASO 8 - Entrar al contenedor namenode
+
 docker exec -it namenode bash
 
-Si estas dentro de docker-hadoop:
 
-docker cp ../datos_200mb.csv namenode:/tmp/datos_200mb.csv
-docker exec -it namenode bash
+=============== DENTRO DEL CONTENEDOR namenode ===============
 
-G. DENTRO DEL CONTENEDOR NAMENODE - SUBIR CSV PESADO A HDFS
+PASO 9 - Subir el CSV a HDFS
 
+hdfs dfsadmin -safemode wait
 hdfs dfs -mkdir -p /data
 hdfs dfs -put -f /tmp/datos_200mb.csv /data/
 hdfs dfs -ls -h /data
-hdfs dfs -head /data/datos_200mb.csv
 exit
 
-H. VERIFICACION EN EL NAVEGADOR
+Debes ver: ... 200.1 M ... /data/datos_200mb.csv
+(Las lineas INFO o WARN son normales.)
 
-Abrir:
+
+=============== NAVEGADOR ===============
+
+PASO 10 - Ver el archivo
 
 http://localhost:9870
+Utilities -> Browse the file system -> /data
+Debe aparecer datos_200mb.csv con 200.1 MB
 
-Buscar:
 
-Utilities -> Browse the file system
+=============== AL TERMINAR (TERMINAL DE TU PC) ===============
 
-Revisar:
-
-/data
-
-Tambien puedes abrir:
-
-http://localhost:8088
-
-I. DESDE TU COMPUTADORA - APAGAR HADOOP
-
-Si aun estas dentro del contenedor:
-
-exit
-
-Luego, estando dentro de hadoop_isil/docker-hadoop:
-
+cd ~/hadoop_isil/docker-hadoop
 docker compose down
