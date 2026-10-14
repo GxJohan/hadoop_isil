@@ -871,26 +871,49 @@ docker exec namenode sh -lc '/opt/hadoop-3.2.1/bin/hdfs dfs -head /data/ai_stude
               <div class="step__number">5</div>
               <div>
                 <h3 class="step__title">Ejecutar el trabajo real de Hadoop Streaming</h3>
-                <p class="muted">Este es el MapReduce completo. Primero limpia la salida anterior y luego lanza el job.</p>
+                <p class="muted">Este es el MapReduce completo. Se lanza desde dentro del contenedor <code>namenode</code>, así funciona igual en Windows, macOS y Ubuntu.</p>
               </div>
             </div>
             <span class="context-tag">Ejecutar en la terminal de tu computadora</span>
             <div class="code-block">
               <div class="code-block__bar">
-                <span class="code-label">Limpiar salida anterior</span>
+                <span class="code-label">Entrar al contenedor</span>
                 <button class="copy-btn" data-copy-target="step5a">Copiar</button>
               </div>
-              <pre id="step5a">docker exec namenode /opt/hadoop-3.2.1/bin/hdfs dfs -rm -r -f /output_major_category</pre>
+              <pre id="step5a">docker exec -it namenode bash</pre>
+            </div>
+            <p class="muted" style="margin-top: 12px;">El prompt cambia a algo como <code>root@...:/#</code>. Desde aquí estás dentro del contenedor.</p>
+            <span class="context-tag" style="margin-top: 6px;">Ejecutar dentro del contenedor namenode</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">Limpiar salida anterior</span>
+                <button class="copy-btn" data-copy-target="step5b">Copiar</button>
+              </div>
+              <pre id="step5b">cd /workshop/week7/scripts
+hdfs dfs -rm -r -f /output_major_category</pre>
             </div>
             <div class="code-block" style="margin-top: 14px;">
               <div class="code-block__bar">
                 <span class="code-label">Ejecutar el job</span>
-                <button class="copy-btn" data-copy-target="step5b">Copiar</button>
+                <button class="copy-btn" data-copy-target="step5c">Copiar</button>
               </div>
-              <pre id="step5b">docker exec namenode sh -lc '/opt/hadoop-3.2.1/bin/hadoop jar /opt/hadoop-3.2.1/share/hadoop/tools/lib/hadoop-streaming-3.2.1.jar -files /workshop/week7/scripts/mapper_major_category.py,/workshop/week7/scripts/reducer_count.py -mapper "python3 mapper_major_category.py" -reducer "python3 reducer_count.py" -input /data/ai_student_impact_dataset.csv -output /output_major_category'</pre>
+              <pre id="step5c">hadoop jar /opt/hadoop-3.2.1/share/hadoop/tools/lib/hadoop-streaming-3.2.1.jar -files mapper_major_category.py,reducer_count.py -mapper "python3 mapper_major_category.py" -reducer "python3 reducer_count.py" -input /data/ai_student_impact_dataset.csv -output /output_major_category</pre>
+            </div>
+            <div class="code-block" style="margin-top: 14px;">
+              <div class="code-block__bar">
+                <span class="code-label">Salir del contenedor</span>
+                <button class="copy-btn" data-copy-target="step5d">Copiar</button>
+              </div>
+              <pre id="step5d">exit</pre>
             </div>
             <div class="result-box">
-              <strong>Debes ver:</strong> mensajes de avance del job hasta llegar a <code>map 100% reduce 100%</code>.
+              <strong>Debes ver:</strong> mensajes de avance del job hasta llegar a <code>map 100% reduce 100%</code> y
+              <code>completed successfully</code>. Después del <code>exit</code> vuelves a la terminal de tu computadora para el paso 6.
+            </div>
+            <div class="warning-box" style="margin-top: 14px;">
+              <strong>¿Por qué dentro del contenedor?</strong> El job lleva comillas dobles (<code>"python3 ..."</code>). Si lo lanzas con
+              <code>docker exec ... sh -lc '...'</code> desde PowerShell de Windows, esas comillas se pierden y Hadoop falla con
+              <code>Required argument: -input</code>.
             </div>
           </article>
 
@@ -1093,6 +1116,16 @@ docker exec namenode /opt/hadoop-3.2.1/bin/hdfs dfs -ls -h /output_major_categor
                 <td>En Windows los comandos con <code>sh -lc '...'</code> fallan</td>
                 <td>Estás usando CMD, que no entiende las comillas simples.</td>
                 <td>Abre <strong>PowerShell</strong> o <strong>Git Bash</strong> y vuelve a pegar el comando.</td>
+              </tr>
+              <tr>
+                <td><code>Required argument: -input</code> o <code>Missing argument for option: files</code></td>
+                <td>El job no llegó completo a Hadoop: se pegó partido en varias líneas (aparece <code>&gt;&gt;</code>) o se lanzó desde PowerShell con comillas internas.</td>
+                <td>Ejecuta el paso 5 tal como está: primero <code>docker exec -it namenode bash</code> y luego el job dentro del contenedor, en una sola línea.</td>
+              </tr>
+              <tr>
+                <td><code>NameError: name 'Student_ID' is not defined</code> o <code>python3\r: No such file or directory</code></td>
+                <td>El comando se pegó partido: <code>python3</code> quedó solo al final de una línea.</td>
+                <td>Usa el botón Copiar y pega el comando en una sola línea. Si PowerShell muestra <code>&gt;&gt;</code>, presiona <code>Ctrl+C</code> y vuelve a pegar.</td>
               </tr>
               <tr>
                 <td>No encuentra <code>ai_student_impact_dataset.csv</code></td>

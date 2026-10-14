@@ -155,16 +155,23 @@ STEM      ...
 
 ## Ejecutar el trabajo real de Hadoop Streaming
 
-Primero, borrar una salida anterior si ya existe:
+Se lanza desde dentro del contenedor `namenode`. Asi funciona igual en todos los
+sistemas: con `docker exec ... sh -lc '...'` desde PowerShell de Windows se pierden las
+comillas internas (`"python3 ..."`) y Hadoop falla con `Required argument: -input`.
+
+Desde tu computadora, entrar al contenedor:
 
 ```bash
-docker exec namenode /opt/hadoop-3.2.1/bin/hdfs dfs -rm -r -f /output_major_category
+docker exec -it namenode bash
 ```
 
-Luego ejecutar el job:
+Dentro del contenedor `namenode`, borrar la salida anterior y ejecutar el job:
 
 ```bash
-docker exec namenode sh -lc '/opt/hadoop-3.2.1/bin/hadoop jar /opt/hadoop-3.2.1/share/hadoop/tools/lib/hadoop-streaming-3.2.1.jar -files /workshop/week7/scripts/mapper_major_category.py,/workshop/week7/scripts/reducer_count.py -mapper "python3 mapper_major_category.py" -reducer "python3 reducer_count.py" -input /data/ai_student_impact_dataset.csv -output /output_major_category'
+cd /workshop/week7/scripts
+hdfs dfs -rm -r -f /output_major_category
+hadoop jar /opt/hadoop-3.2.1/share/hadoop/tools/lib/hadoop-streaming-3.2.1.jar -files mapper_major_category.py,reducer_count.py -mapper "python3 mapper_major_category.py" -reducer "python3 reducer_count.py" -input /data/ai_student_impact_dataset.csv -output /output_major_category
+exit
 ```
 
 ## Verificar el resultado
@@ -223,3 +230,5 @@ part-00000
 | `env file ... docker-hadoop/hadoop.env not found` | Falta `docker-hadoop`: desde `hadoop_isil` ejecutar `git clone https://github.com/big-data-europe/docker-hadoop.git` |
 | `container name "/namenode" is already in use` | Sigue creado el Hadoop de Semana 5-6: `cd docker-hadoop`, `docker compose down`, `cd ..` |
 | En Windows fallan los comandos `sh -lc '...'` | Se esta usando CMD: abrir PowerShell o Git Bash |
+| `Required argument: -input` o `Missing argument for option: files` | El job no llego completo: ejecutarlo dentro del contenedor (paso 5) y en una sola linea |
+| `NameError: name 'Student_ID'` o `python3\r: No such file or directory` | El comando se pego partido (PowerShell muestra `>>`): `Ctrl+C` y pegarlo en una sola linea |
