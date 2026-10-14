@@ -38,6 +38,16 @@ Flujo recomendado:
 6. Revisar el resultado en consola y en `http://localhost:9870`
 
 Solo deben clonar el repositorio quienes todavia no tengan la carpeta `hadoop_isil`.
+En ese caso tambien deben clonar `docker-hadoop` dentro (aporta `hadoop.env`):
+
+```bash
+git clone https://github.com/GxJohan/hadoop_isil.git
+cd hadoop_isil
+git clone https://github.com/big-data-europe/docker-hadoop.git
+```
+
+En Windows usar **PowerShell** o **Git Bash**, no CMD: CMD no entiende las comillas
+simples `'...'` de los comandos `sh -lc`.
 
 ## Estructura esperada
 
@@ -46,10 +56,17 @@ hadoop_isil/
 ├── docker-hadoop/
 ├── ai_student_impact_dataset.csv
 ├── docker-compose.week7.yml
-└── week7/
-    ├── docker/
-    ├── scripts/
-    └── README.md
+├── week7/
+│   ├── docker/
+│   ├── scripts/
+│   └── README.md
+├── images/
+├── README.md
+├── comandos-hadoop.txt
+├── index.html
+├── week7.html
+├── week9.html
+└── week12.html
 ```
 
 ## Requisito del dataset
@@ -62,14 +79,34 @@ hadoop_isil/ai_student_impact_dataset.csv
 
 ## Comandos validados
 
+Mensajes normales que se pueden ignorar:
+
+- `mesg: ttyname failed: Inappropriate ioctl for device`
+- Lineas con `INFO`, por ejemplo `INFO sasl.SaslDataTransferClient ...`
+- En Mac con chip Apple: `The requested image's platform (linux/amd64) does not match ...` (funciona igual, mas lento)
+
 ### 1. Levantar el entorno de Semana 7
 
-Ejecutar desde tu computadora, estando en la carpeta raiz `hadoop_isil`:
+Ejecutar desde tu computadora, estando en la carpeta raiz `hadoop_isil`.
+
+Primero apagar el Hadoop de Semana 5-6 (usa los mismos `container_name`; si no estaba
+encendido, no pasa nada):
+
+```bash
+cd docker-hadoop
+docker compose down
+cd ..
+```
+
+Luego levantar Semana 7:
 
 ```bash
 docker compose -f docker-compose.week7.yml up --build -d
 docker compose -f docker-compose.week7.yml ps
 ```
+
+Todos los contenedores deben quedar `(healthy)`. La primera vez tarda varios minutos y
+necesita internet, porque `--build` instala Python en cada imagen.
 
 ### 2. Verificar Python dentro del entorno
 
@@ -178,3 +215,11 @@ part-00000
 - El dataset `ai_student_impact_dataset.csv` si funciona bien para Streaming.
 - El dataset viejo de 200 MB no era buena opcion para esta parte porque tenia registros partidos por varias lineas.
 - Los scripts deben ser compatibles con `Python 3.5.3`, por eso no usan `f-strings`.
+
+## Errores comunes
+
+| Problema | Que hacer |
+|---|---|
+| `env file ... docker-hadoop/hadoop.env not found` | Falta `docker-hadoop`: desde `hadoop_isil` ejecutar `git clone https://github.com/big-data-europe/docker-hadoop.git` |
+| `container name "/namenode" is already in use` | Sigue creado el Hadoop de Semana 5-6: `cd docker-hadoop`, `docker compose down`, `cd ..` |
+| En Windows fallan los comandos `sh -lc '...'` | Se esta usando CMD: abrir PowerShell o Git Bash |

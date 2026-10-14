@@ -678,12 +678,19 @@ git pull</pre>
                 <button class="copy-btn" data-copy-target="cmd-nuevo">Copiar</button>
               </div>
               <pre id="cmd-nuevo">git clone https://github.com/GxJohan/hadoop_isil.git
-cd hadoop_isil</pre>
+cd hadoop_isil
+git clone https://github.com/big-data-europe/docker-hadoop.git</pre>
             </div>
+            <p class="muted" style="margin-top: 12px;">
+              El segundo <code>git clone</code> es obligatorio: crea <code>hadoop_isil/docker-hadoop</code>, que trae el archivo <code>hadoop.env</code> que usa la Semana 7.
+            </p>
           </div>
         </div>
         <div class="warning-box" style="margin-top: 16px;">
           <strong>Regla práctica:</strong> aquí los comandos empiezan con <code>docker</code>, así que se ejecutan desde la terminal de tu computadora.
+        </div>
+        <div class="warning-box" style="margin-top: 16px;">
+          <strong>Windows:</strong> usa <strong>PowerShell</strong> o <strong>Git Bash</strong>. No uses <strong>CMD</strong> (Símbolo del sistema): no entiende las comillas simples <code>'...'</code> de los comandos y fallan desde el paso 2.
         </div>
       </section>
 
@@ -706,14 +713,18 @@ cd hadoop_isil</pre>
 │   ├── docker/
 │   ├── scripts/
 │   └── README.md
+├── images/
 ├── README.md
+├── comandos-hadoop.txt
 ├── index.html
-└── week7.html</pre>
+├── week7.html
+├── week9.html
+└── week12.html</pre>
         </div>
         <div class="mini-grid" style="margin-top: 16px;">
           <article class="mini-card">
             <h3>docker-hadoop</h3>
-            <p>Base del entorno Hadoop.</p>
+            <p>Base del entorno Hadoop. Aporta <code>hadoop.env</code>; si no existe, el paso 1 falla.</p>
           </article>
           <article class="mini-card">
             <h3>ai_student_impact_dataset.csv</h3>
@@ -736,6 +747,14 @@ cd hadoop_isil</pre>
         <p class="section-intro">
           Sigue el orden. Cada bloque indica qué debes ejecutar y qué deberías observar.
         </p>
+        <div class="highlight" style="margin-bottom: 18px;">
+          <strong>Mensajes normales que puedes ignorar:</strong>
+          <ul class="note-list">
+            <li><code>mesg: ttyname failed: Inappropriate ioctl for device</code></li>
+            <li>Líneas con <code>INFO</code>, por ejemplo <code>INFO sasl.SaslDataTransferClient ...</code></li>
+            <li>En Mac con chip Apple (M1, M2, M3, M4): <code>The requested image's platform (linux/amd64) does not match ...</code>. Funciona igual, solo un poco más lento.</li>
+          </ul>
+        </div>
 
         <div class="step-list">
           <article class="step">
@@ -747,9 +766,23 @@ cd hadoop_isil</pre>
               </div>
             </div>
             <span class="context-tag">Ejecutar en la terminal de tu computadora</span>
+            <p>
+              Primero apaga el Hadoop de la Semana 5-6. Usa los mismos nombres (<code>namenode</code>, <code>datanode</code>, …),
+              así que no pueden estar encendidos los dos a la vez. Si no estaba encendido, este comando no hace nada malo.
+            </p>
             <div class="code-block">
               <div class="code-block__bar">
-                <span class="code-label">Comandos</span>
+                <span class="code-label">Apagar el Hadoop anterior</span>
+                <button class="copy-btn" data-copy-target="step1a">Copiar</button>
+              </div>
+              <pre id="step1a">cd docker-hadoop
+docker compose down
+cd ..</pre>
+            </div>
+            <p style="margin-top: 14px;">Luego levanta el entorno de Semana 7:</p>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">Levantar Semana 7</span>
                 <button class="copy-btn" data-copy-target="step1">Copiar</button>
               </div>
               <pre id="step1">docker compose -f docker-compose.week7.yml up --build -d
@@ -757,7 +790,11 @@ docker compose -f docker-compose.week7.yml ps</pre>
             </div>
             <div class="result-box">
               <strong>Debes ver:</strong> contenedores como <code>namenode</code>, <code>datanode</code>,
-              <code>resourcemanager</code>, <code>nodemanager</code> e <code>historyserver</code> en estado saludable.
+              <code>resourcemanager</code>, <code>nodemanager</code> e <code>historyserver</code> con estado <code>(healthy)</code>.
+              Si alguno dice <code>(health: starting)</code>, espera un minuto y repite el <code>ps</code>.
+            </div>
+            <div class="warning-box" style="margin-top: 14px;">
+              <strong>La primera vez tarda varios minutos</strong> y necesita internet: <code>--build</code> descarga e instala Python dentro de cada contenedor. No lo canceles. Las siguientes veces es rápido.
             </div>
           </article>
 
@@ -1041,6 +1078,21 @@ docker exec namenode /opt/hadoop-3.2.1/bin/hdfs dfs -ls -h /output_major_categor
                 <td><code>python3 --version</code> falla en el contenedor</td>
                 <td>El stack de Semana 7 no se levantó con las imágenes correctas.</td>
                 <td>Vuelve a ejecutar <code>docker compose -f docker-compose.week7.yml up --build -d</code>.</td>
+              </tr>
+              <tr>
+                <td><code>env file ... docker-hadoop/hadoop.env not found</code> al levantar</td>
+                <td>Falta la carpeta <code>docker-hadoop</code> dentro de <code>hadoop_isil</code>.</td>
+                <td>Desde <code>hadoop_isil</code> ejecuta <code>git clone https://github.com/big-data-europe/docker-hadoop.git</code> y repite el paso 1.</td>
+              </tr>
+              <tr>
+                <td><code>container name "/namenode" is already in use</code></td>
+                <td>El Hadoop de la Semana 5-6 sigue creado.</td>
+                <td>Ejecuta <code>cd docker-hadoop</code>, <code>docker compose down</code>, <code>cd ..</code> y repite el paso 1. También puedes borrarlo desde Docker Desktop (grupo <code>docker-hadoop</code>).</td>
+              </tr>
+              <tr>
+                <td>En Windows los comandos con <code>sh -lc '...'</code> fallan</td>
+                <td>Estás usando CMD, que no entiende las comillas simples.</td>
+                <td>Abre <strong>PowerShell</strong> o <strong>Git Bash</strong> y vuelve a pegar el comando.</td>
               </tr>
               <tr>
                 <td>No encuentra <code>ai_student_impact_dataset.csv</code></td>
