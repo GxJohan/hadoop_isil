@@ -426,6 +426,39 @@
           <strong>Importante:</strong> el bloque de HDFS de abajo es el punto mínimo necesario para confirmar que
           Spark luego podrá leer el archivo desde <code>hdfs://namenode:9000/data/...</code>.
         </div>
+
+        <h3 style="margin-top: 24px;">Abre la terminal según tu sistema</h3>
+        <p class="muted">
+          Todos los comandos <code>docker</code> de esta guía están escritos en <strong>una sola línea</strong> y con
+          comillas dobles, así que funcionan igual en CMD, PowerShell, macOS y Ubuntu. Solo cambia cómo entras a la carpeta.
+        </p>
+        <div class="mini-grid">
+          <article class="mini-card">
+            <h3>Windows - CMD</h3>
+            <p>Abre <strong>Símbolo del sistema</strong> (o la terminal de VS Code) con Docker Desktop encendido.</p>
+            <pre style="background: var(--code-bg); border-radius: 12px;">cd /d C:\Users\TU_USUARIO\hadoop_isil</pre>
+          </article>
+          <article class="mini-card">
+            <h3>Windows - PowerShell</h3>
+            <p>Abre <strong>PowerShell</strong> (o la terminal de VS Code) con Docker Desktop encendido.</p>
+            <pre style="background: var(--code-bg); border-radius: 12px;">cd C:\Users\TU_USUARIO\hadoop_isil</pre>
+          </article>
+          <article class="mini-card">
+            <h3>macOS</h3>
+            <p>Abre <strong>Terminal</strong> (o la de VS Code) con Docker Desktop encendido.</p>
+            <pre style="background: var(--code-bg); border-radius: 12px;">cd ~/hadoop_isil</pre>
+          </article>
+          <article class="mini-card">
+            <h3>Ubuntu</h3>
+            <p>Abre la <strong>Terminal</strong>. Docker Engine debe estar corriendo (<code>sudo systemctl start docker</code>).</p>
+            <pre style="background: var(--code-bg); border-radius: 12px;">cd ~/hadoop_isil</pre>
+          </article>
+        </div>
+        <p class="muted">
+          Cambia la ruta por la carpeta donde tú clonaste el proyecto. Para confirmar que estás en el lugar correcto:
+          en CMD usa <code>dir</code>; en PowerShell, macOS y Ubuntu usa <code>ls</code>. Debes ver
+          <code>docker-compose.week7.yml</code> y <code>ai_student_impact_dataset.csv</code>.
+        </p>
       </section>
 
       <section class="card" id="hdfs">
@@ -475,10 +508,11 @@ docker compose -f docker-compose.week7.yml ps</pre>
               <pre id="w9-step2">docker exec namenode /opt/hadoop-3.2.1/bin/hdfs dfs -mkdir -p /data
 docker exec namenode /opt/hadoop-3.2.1/bin/hdfs dfs -put -f /workshop/ai_student_impact_dataset.csv /data/
 docker exec namenode /opt/hadoop-3.2.1/bin/hdfs dfs -ls -h /data
-docker exec namenode sh -lc '/opt/hadoop-3.2.1/bin/hdfs dfs -head /data/ai_student_impact_dataset.csv | head -n 5'</pre>
+docker exec namenode sh -c "/opt/hadoop-3.2.1/bin/hdfs dfs -head /data/ai_student_impact_dataset.csv | head -n 5"</pre>
             </div>
             <div class="result-box">
-              <strong>Debes ver:</strong> el archivo dentro de <code>/data</code> y las primeras filas del CSV al final.
+              <strong>Debes ver:</strong> el archivo (unos <code>5.6 M</code>) dentro de <code>/data</code> y las primeras filas
+              del CSV al final. Las líneas que dicen <code>INFO</code> son normales.
             </div>
           </article>
 
@@ -514,7 +548,7 @@ docker exec namenode sh -lc '/opt/hadoop-3.2.1/bin/hdfs dfs -head /data/ai_stude
                 <p class="muted">Haz esta comprobación antes de abrir Spark.</p>
               </div>
             </div>
-            <span class="context-tag">Terminal de VS Code</span>
+            <span class="context-tag">Terminal de tu computadora</span>
             <div class="code-block">
               <div class="code-block__bar">
                 <span class="code-label">Comando</span>
@@ -536,19 +570,26 @@ docker exec namenode sh -lc '/opt/hadoop-3.2.1/bin/hdfs dfs -head /data/ai_stude
                 <p class="muted">Aquí entras a <code>namenode</code> y revisas desde dentro.</p>
               </div>
             </div>
-            <span class="context-tag">Terminal de tu computadora y luego contenedor</span>
+            <span class="context-tag">Terminal de tu computadora</span>
             <div class="code-block">
               <div class="code-block__bar">
-                <span class="code-label">Comandos</span>
-                <button class="copy-btn" data-copy-target="w9-step5">Copiar</button>
+                <span class="code-label">Paso A: entrar al contenedor</span>
+                <button class="copy-btn" data-copy-target="w9-step5a">Copiar</button>
               </div>
-              <pre id="w9-step5">docker exec -it namenode bash
-
-hdfs dfs -ls -h /data
+              <pre id="w9-step5a">docker exec -it namenode bash</pre>
+            </div>
+            <p class="muted">El prompt cambia a algo como <code>root@xxxx:/#</code>. Recién ahí pega el paso B.</p>
+            <span class="context-tag">Dentro del contenedor namenode</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">Paso B: revisar HDFS</span>
+                <button class="copy-btn" data-copy-target="w9-step5b">Copiar</button>
+              </div>
+              <pre id="w9-step5b">hdfs dfs -ls -h /data
 hdfs dfs -head /data/ai_student_impact_dataset.csv</pre>
             </div>
             <div class="result-box">
-              <strong>Si aparece el archivo:</strong> ya puedes conectar Spark. Luego sal con <code>exit</code>.
+              <strong>Si aparece el archivo:</strong> ya puedes conectar Spark. Luego sal con <code>exit</code> para volver a tu computadora.
             </div>
           </article>
 
@@ -566,12 +607,13 @@ hdfs dfs -head /data/ai_student_impact_dataset.csv</pre>
                 <span class="code-label">Comandos</span>
                 <button class="copy-btn" data-copy-target="w9-step6">Copiar</button>
               </div>
-              <pre id="w9-step6">docker pull apache/spark-py
+              <pre id="w9-step6">docker pull apache/spark-py:v3.4.0
 docker network ls</pre>
             </div>
             <div class="result-box">
-              <strong>Debes identificar:</strong> la red del proyecto. En este repositorio normalmente será
-              <code>hadoop_isil_default</code>.
+              <strong>Debes identificar:</strong> la red del proyecto. En este repositorio será
+              <code>hadoop_isil_default</code>. La imagen pesa cerca de 1 GB: la primera descarga demora.
+              Funciona en PCs Intel/AMD y en Mac con chip M1/M2/M3/M4.
             </div>
           </article>
 
@@ -580,7 +622,7 @@ docker network ls</pre>
               <div class="step__number">7</div>
               <div>
                 <h3 class="step__title">Entra a PySpark dentro de la misma red de Hadoop</h3>
-                <p class="muted">Si la red tiene otro nombre, reemplázala.</p>
+                <p class="muted">Si la red tiene otro nombre, reemplázala. Es una sola línea: cópiala completa.</p>
               </div>
             </div>
             <span class="context-tag">Terminal de tu computadora</span>
@@ -589,14 +631,12 @@ docker network ls</pre>
                 <span class="code-label">Comando</span>
                 <button class="copy-btn" data-copy-target="w9-step7">Copiar</button>
               </div>
-              <pre id="w9-step7">docker run -it --rm \
-  --name spark-sql \
-  --network hadoop_isil_default \
-  apache/spark-py \
-  /opt/spark/bin/pyspark</pre>
+              <pre id="w9-step7">docker run -it --rm --name spark-sql --network hadoop_isil_default apache/spark-py:v3.4.0 /opt/spark/bin/pyspark</pre>
             </div>
             <div class="result-box">
-              <strong>Con esto entras:</strong> a una consola interactiva de PySpark.
+              <strong>Con esto entras:</strong> a una consola interactiva de PySpark. Verás el logo de Spark
+              (versión <code>3.4.0</code>) y el prompt <code>&gt;&gt;&gt;</code>. Los mensajes <code>WARN</code> son normales.
+              Para salir al final escribe <code>exit()</code>.
             </div>
           </article>
 
@@ -620,6 +660,10 @@ spark = SparkSession.builder \
     .appName("ISIL_Spark_SQL") \
     .config("spark.hadoop.fs.defaultFS", "hdfs://namenode:9000") \
     .getOrCreate()</pre>
+            </div>
+            <div class="result-box">
+              <strong>Nota:</strong> PySpark ya trae una variable <code>spark</code> creada, así que puede aparecer un aviso
+              <code>Using an existing Spark session</code>. Es normal: igual leemos con la ruta completa <code>hdfs://namenode:9000/...</code>.
             </div>
           </article>
 
@@ -697,6 +741,9 @@ SELECT COUNT(*) AS total_registros
 FROM personas
 """).show()</pre>
             </div>
+            <div class="result-box">
+              <strong>Resultado esperado:</strong> <code>50000</code>.
+            </div>
           </article>
 
           <article class="step">
@@ -719,6 +766,10 @@ GROUP BY Major_Category
 ORDER BY total_estudiantes DESC
 """).show(truncate=False)</pre>
             </div>
+            <div class="result-box">
+              <strong>Resultado esperado:</strong> STEM 15059, Business 12538, Humanities 9994, Medical 6476, Arts 5933.
+              Es el mismo resultado que dio MapReduce en la Semana 7.
+            </div>
           </article>
 
           <article class="step">
@@ -740,6 +791,9 @@ SELECT
   ROUND(AVG(CAST(Post_Semester_GPA AS DOUBLE)), 3) AS promedio_post_gpa
 FROM personas
 """).show(truncate=False)</pre>
+            </div>
+            <div class="result-box">
+              <strong>Resultado esperado:</strong> <code>promedio_pre_gpa</code> 3.146 y <code>promedio_post_gpa</code> 3.349.
             </div>
           </article>
 
@@ -764,6 +818,9 @@ FROM personas
 GROUP BY Major_Category
 ORDER BY promedio_horas_genai DESC
 """).show(truncate=False)</pre>
+            </div>
+            <div class="result-box">
+              <strong>Resultado esperado:</strong> STEM 10.49, Business 8.28, Medical 7.55, Arts 7.27, Humanities 6.77.
             </div>
           </article>
 
@@ -791,6 +848,10 @@ ORDER BY CAST(Weekly_GenAI_Hours AS DOUBLE) DESC
 LIMIT 10
 """).show(truncate=False)</pre>
             </div>
+            <div class="result-box">
+              <strong>Resultado esperado:</strong> 10 filas con <code>Weekly_GenAI_Hours</code> = <code>40.0</code>
+              (hay empates, así que los <code>Student_ID</code> pueden variar).
+            </div>
           </article>
         </div>
       </section>
@@ -816,6 +877,22 @@ LIMIT 10
           <article class="mini-card">
             <h3>El CSV carga raro</h3>
             <p>Usa las opciones <code>header</code>, <code>multiline</code> y <code>escape</code> tal como están en esta guía.</p>
+          </article>
+          <article class="mini-card">
+            <h3>Windows: el comando se corta o da error raro</h3>
+            <p>Copia el comando completo con el botón <strong>Copiar</strong>. No uses <code>\</code> al final de línea ni comillas simples <code>'...'</code> en CMD: esta guía ya evita ambos.</p>
+          </article>
+          <article class="mini-card">
+            <h3>Ubuntu: permission denied ... docker.sock</h3>
+            <p>Antepón <code>sudo</code> a los comandos <code>docker</code>, o ejecuta una vez <code>sudo usermod -aG docker $USER</code> y vuelve a iniciar sesión.</p>
+          </article>
+          <article class="mini-card">
+            <h3>Conflict: container name already in use</h3>
+            <p>Tienes levantado el stack de <code>docker-hadoop</code> (Semana 5-6). Apágalo desde esa carpeta con <code>docker compose down</code> y vuelve al paso 1.</p>
+          </article>
+          <article class="mini-card">
+            <h3>Cannot connect to the Docker daemon</h3>
+            <p>Docker no está encendido. En Windows/macOS abre Docker Desktop y espera a que diga <em>running</em>; en Ubuntu usa <code>sudo systemctl start docker</code>.</p>
           </article>
         </div>
       </section>
