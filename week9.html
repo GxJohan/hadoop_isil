@@ -636,7 +636,19 @@ docker network ls</pre>
             <div class="result-box">
               <strong>Con esto entras:</strong> a una consola interactiva de PySpark. Verás el logo de Spark
               (versión <code>3.4.0</code>) y el prompt <code>&gt;&gt;&gt;</code>. Los mensajes <code>WARN</code> son normales.
-              Para salir al final escribe <code>exit()</code>.
+            </div>
+            <div class="warning-box" style="margin-top: 12px;">
+              <strong>No salgas de PySpark todavía.</strong> Deja esta ventana abierta con el prompt <code>&gt;&gt;&gt;</code>:
+              todos los bloques marcados como <strong>Dentro de PySpark</strong>
+              (pasos 8 al 15) se pegan aquí, uno detrás de otro, en esta misma consola.
+              <br><br>
+              <strong>¿Cómo sé dónde estoy?</strong>
+              <br>• Si la línea empieza con <code>&gt;&gt;&gt;</code> o <code>...</code> → estás en PySpark. Pega el código Python aquí.
+              <br>• Si ves algo como <code>usuario@equipo carpeta %</code>, <code>$</code>, <code>C:\...&gt;</code> o <code>PS C:\...&gt;</code> → estás en la terminal de tu computadora, <strong>no</strong> en PySpark. Si pegas ahí el código Python verás errores como <code>command not found: from</code>, <code>number expected</code> o <code>"from" no se reconoce como un comando</code>.
+              <br><br>
+              <strong>Si saliste por error</strong> (escribiste <code>exit()</code> o cerraste la ventana): el contenedor de Spark se borra
+              y también todo lo que creaste (<code>spark</code>, <code>df</code>, la vista <code>personas</code>). Vuelve a ejecutar
+              este paso 7 y repite desde el paso 8 en orden.
             </div>
           </article>
 
@@ -852,6 +864,10 @@ LIMIT 10
               <strong>Resultado esperado:</strong> 10 filas con <code>Weekly_GenAI_Hours</code> = <code>40.0</code>
               (hay empates, así que los <code>Student_ID</code> pueden variar).
             </div>
+            <div class="warning-box" style="margin-top: 12px;">
+              <strong>Recién ahora puedes salir:</strong> cuando termines todas las consultas, escribe <code>exit()</code>
+              en el prompt <code>&gt;&gt;&gt;</code>. Volverás a la terminal de tu computadora y el contenedor de Spark se borrará solo.
+            </div>
           </article>
         </div>
       </section>
@@ -889,6 +905,14 @@ LIMIT 10
           <article class="mini-card">
             <h3>Conflict: container name already in use</h3>
             <p>Tienes levantado el stack de <code>docker-hadoop</code> (Semana 5-6). Apágalo desde esa carpeta con <code>docker compose down</code> y vuelve al paso 1.</p>
+          </article>
+          <article class="mini-card">
+            <h3>command not found: from / number expected</h3>
+            <p>Pegaste código Python en la terminal de tu computadora, no en PySpark (pasa si escribiste <code>exit()</code> antes de tiempo). Vuelve al paso 7, espera el prompt <code>&gt;&gt;&gt;</code> y repite desde el paso 8.</p>
+          </article>
+          <article class="mini-card">
+            <h3>NameError: name 'df' is not defined</h3>
+            <p>Saliste de PySpark y entraste de nuevo: las variables se pierden al salir. Repite los pasos 8, 9 y 10 (este último crea la vista <code>personas</code>) antes de las consultas.</p>
           </article>
           <article class="mini-card">
             <h3>Cannot connect to the Docker daemon</h3>
