@@ -1,0 +1,1457 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Semana 10 - Trabajo grupal: Hadoop + Spark SQL</title>
+  <style>
+    :root {
+      --bg: #f4fbff;
+      --primary: #00a6d6;
+      --primary-dark: #0077a3;
+      --primary-soft: #dff6ff;
+      --text: #1f2937;
+      --muted: #4b5563;
+      --card: #ffffff;
+      --border: #bfe9f5;
+      --code-bg: #0f172a;
+      --code-text: #e0f2fe;
+      --success: #0f766e;
+      --warning: #b45309;
+      --shadow: 0 18px 45px rgba(0, 119, 163, 0.12);
+      --radius-lg: 24px;
+      --radius-md: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      overflow-x: hidden;
+    }
+
+    body {
+      margin: 0;
+      overflow-x: hidden;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(0, 166, 214, 0.15), transparent 28%),
+        radial-gradient(circle at top right, rgba(0, 119, 163, 0.12), transparent 24%),
+        linear-gradient(180deg, #ffffff 0%, var(--bg) 28%, var(--bg) 100%);
+      font-family: "Trebuchet MS", "Segoe UI", Verdana, sans-serif;
+      line-height: 1.65;
+    }
+
+    .container {
+      width: min(1000px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .hero {
+      padding: 48px 0 32px;
+    }
+
+    .hero__panel,
+    .card {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(191, 233, 245, 0.95);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .hero__panel {
+      padding: 34px;
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      font-size: 0.94rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--primary-dark);
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin-top: 0;
+      color: #0f3351;
+      font-family: Georgia, "Times New Roman", serif;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      line-height: 1.1;
+      margin-bottom: 14px;
+    }
+
+    .subtitle,
+    .section-intro,
+    .muted {
+      color: var(--muted);
+    }
+
+    .hero__badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .logo-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .logo-card {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 120px;
+      padding: 16px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, #ffffff 0%, #f8fdff 100%);
+    }
+
+    .logo-card img {
+      max-width: 100%;
+      max-height: 72px;
+      height: auto;
+      display: block;
+      object-fit: contain;
+    }
+
+    .badge,
+    .context-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: var(--primary-soft);
+      border: 1px solid var(--border);
+      color: var(--primary-dark);
+      font-weight: 700;
+      font-size: 0.92rem;
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .quick-nav {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(244, 251, 255, 0.92);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid rgba(191, 233, 245, 0.85);
+    }
+
+    .quick-nav__inner {
+      width: min(1000px, calc(100% - 32px));
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 14px 0;
+    }
+
+    .quick-nav a {
+      text-decoration: none;
+      color: var(--primary-dark);
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 0.92rem;
+      font-weight: 700;
+    }
+
+    main {
+      padding: 28px 0 52px;
+    }
+
+    .stack,
+    .step-list,
+    .mini-grid {
+      display: grid;
+      gap: 22px;
+    }
+
+    .card {
+      padding: 28px;
+    }
+
+    .mini-grid {
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .mini-card,
+    .step {
+      padding: 18px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, #ffffff 0%, #f8fdff 100%);
+    }
+
+    .highlight {
+      border-left: 5px solid var(--primary);
+      background: var(--primary-soft);
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      color: #0d425c;
+    }
+
+    .warning-box {
+      border-left: 5px solid #f59e0b;
+      background: #fff7ed;
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      color: #7c2d12;
+    }
+
+    .step__head {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      margin-bottom: 14px;
+    }
+
+    .step__number {
+      flex: 0 0 auto;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: #ffffff;
+      font-weight: 800;
+    }
+
+    .step__title {
+      margin: 0;
+      font-size: 1.28rem;
+    }
+
+    .code-block {
+      position: relative;
+      margin: 14px 0 0;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: var(--code-bg);
+    }
+
+    .code-block__bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      background: rgba(15, 23, 42, 0.82);
+      border-bottom: 1px solid rgba(224, 242, 254, 0.12);
+    }
+
+    .code-label {
+      color: #bae6fd;
+      font-size: 0.84rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .copy-btn {
+      appearance: none;
+      border: 1px solid rgba(224, 242, 254, 0.28);
+      background: rgba(14, 165, 233, 0.18);
+      color: #e0f2fe;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 0.86rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    pre {
+      margin: 0;
+      padding: 18px;
+      overflow-x: auto;
+      color: var(--code-text);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    code,
+    pre {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    }
+
+    .result-box {
+      margin-top: 16px;
+      padding: 16px;
+      border-radius: var(--radius-md);
+      border: 1px solid #bae6fd;
+      background: linear-gradient(180deg, #effbff 0%, #f8feff 100%);
+    }
+
+    .result-box strong {
+      color: var(--success);
+    }
+
+    .plain-list {
+      margin: 10px 0 0;
+      padding-left: 18px;
+    }
+
+    .plain-list li {
+      margin-bottom: 8px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      margin-top: 12px;
+    }
+
+    .data-table,
+    .result-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.93rem;
+    }
+
+    .data-table th,
+    .data-table td {
+      padding: 10px 12px;
+      text-align: left;
+      vertical-align: top;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .data-table th {
+      background: var(--primary-soft);
+      color: #0d425c;
+      white-space: nowrap;
+    }
+
+    .data-table td:first-child,
+    .data-table td:nth-child(2) {
+      white-space: nowrap;
+    }
+
+    .result-table th,
+    .result-table td {
+      padding: 6px 12px;
+      text-align: left;
+      border-bottom: 1px solid #cdeaf5;
+    }
+
+    .result-table th {
+      color: #0d425c;
+    }
+
+    .result-table .num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    footer {
+      padding: 0 0 36px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 0.95rem;
+    }
+
+    @media (max-width: 760px) {
+      .hero__panel,
+      .card {
+        padding: 22px;
+      }
+
+      .quick-nav__inner {
+        justify-content: center;
+      }
+
+      .code-block__bar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .copy-btn {
+        width: 100%;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="container">
+      <div class="hero__panel">
+        <p class="eyebrow">Curso de Big Data - ISIL</p>
+        <h1>Semana 10 - Trabajo grupal: Hadoop + Spark SQL</h1>
+        <p class="subtitle">
+          Es el mismo paso a paso de la Semana 9 (HDFS, PySpark y Spark SQL), pero con un dataset nuevo y mucho más grande:
+          <code>ventas_ecommerce_peru.csv</code>, con 500 000 pedidos de una tienda online peruana. Primero lo dejas en
+          <code>HDFS</code>, luego lo consultas con <code>Spark SQL</code> y al final resuelves las preguntas del trabajo grupal.
+        </p>
+        <div class="hero__badges">
+          <span class="badge">Semana 10</span>
+          <span class="badge">Trabajo grupal calificado</span>
+          <span class="badge">Hadoop + HDFS + PySpark</span>
+          <span class="badge">500 000 pedidos</span>
+        </div>
+        <div class="logo-strip" aria-label="Logos oficiales">
+          <div class="logo-card">
+            <img
+              src="https://hadoop.apache.org/hadoop-logo.jpg"
+              alt="Logo oficial de Apache Hadoop"
+              loading="lazy"
+              referrerpolicy="no-referrer"
+            >
+          </div>
+          <div class="logo-card">
+            <img
+              src="https://apache.org/logos/res/spark/spark.png"
+              alt="Logo oficial de Apache Spark"
+              loading="lazy"
+              referrerpolicy="no-referrer"
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <nav class="quick-nav" aria-label="Navegación rápida">
+    <div class="quick-nav__inner">
+      <a href="#antes">Antes de empezar</a>
+      <a href="#dataset">El dataset</a>
+      <a href="#hdfs">Bloque HDFS</a>
+      <a href="#spark">Spark SQL</a>
+      <a href="#consultas">Consultas guiadas</a>
+      <a href="#grupal">Trabajo grupal</a>
+      <a href="#entrega">Entrega</a>
+      <a href="#errores">Errores comunes</a>
+    </div>
+  </nav>
+
+  <main>
+    <div class="container stack">
+      <section class="card" id="antes">
+        <h2>Antes de Empezar</h2>
+        <p class="section-intro">
+          Esta semana no empieza desde cero. Primero se deja listo HDFS con el dataset nuevo y luego se conecta Spark al mismo entorno.
+        </p>
+        <div class="highlight">
+          <strong>Idea clave:</strong> si el archivo <code>ventas_ecommerce_peru.csv</code> ya aparece en
+          <code>/data</code> dentro de HDFS, recién ahí tiene sentido entrar a PySpark.
+        </div>
+        <div class="mini-grid" style="margin-top: 16px;">
+          <article class="mini-card">
+            <h3>Carpeta correcta</h3>
+            <p>Trabaja desde la raíz <code>hadoop_isil</code>.</p>
+          </article>
+          <article class="mini-card">
+            <h3>Archivo requerido</h3>
+            <p>Debe existir <code>ventas_ecommerce_peru.csv</code> (unos 49 MB) en la raíz del proyecto. Si clonaste el proyecto antes de esta semana, tráelo con:</p>
+            <pre style="background: var(--code-bg); border-radius: 12px;">git pull</pre>
+          </article>
+          <article class="mini-card">
+            <h3>Docker activo</h3>
+            <p>Docker Desktop debe estar levantado antes de ejecutar comandos. Este dataset es más grande: asígnale al menos 6 GB de RAM (Docker Desktop, Settings, Resources).</p>
+          </article>
+          <article class="mini-card">
+            <h3>Clúster correcto</h3>
+            <p>Debes usar el entorno de <code>docker-compose.week7.yml</code>, no solo <code>docker-hadoop</code>.</p>
+          </article>
+        </div>
+        <div class="warning-box" style="margin-top: 16px;">
+          <strong>Importante:</strong> el bloque de HDFS de abajo es el punto mínimo necesario para confirmar que
+          Spark luego podrá leer el archivo desde <code>hdfs://namenode:9000/data/...</code>.
+        </div>
+
+        <h3 style="margin-top: 24px;">Abre la terminal según tu sistema</h3>
+        <p class="muted">
+          Todos los comandos <code>docker</code> de esta guía están escritos en <strong>una sola línea</strong> y con
+          comillas dobles, así que funcionan igual en CMD, PowerShell, macOS y Ubuntu. Solo cambia cómo entras a la carpeta.
+        </p>
+        <div class="mini-grid">
+          <article class="mini-card">
+            <h3>Windows - CMD</h3>
+            <p>Abre <strong>Símbolo del sistema</strong> (o la terminal de VS Code) con Docker Desktop encendido.</p>
+            <pre style="background: var(--code-bg); border-radius: 12px;">cd /d C:\Users\TU_USUARIO\hadoop_isil</pre>
+          </article>
+          <article class="mini-card">
+            <h3>Windows - PowerShell</h3>
+            <p>Abre <strong>PowerShell</strong> (o la terminal de VS Code) con Docker Desktop encendido.</p>
+            <pre style="background: var(--code-bg); border-radius: 12px;">cd C:\Users\TU_USUARIO\hadoop_isil</pre>
+          </article>
+          <article class="mini-card">
+            <h3>macOS</h3>
+            <p>Abre <strong>Terminal</strong> (o la de VS Code) con Docker Desktop encendido.</p>
+            <pre style="background: var(--code-bg); border-radius: 12px;">cd ~/hadoop_isil</pre>
+          </article>
+          <article class="mini-card">
+            <h3>Ubuntu</h3>
+            <p>Abre la <strong>Terminal</strong>. Docker Engine debe estar corriendo (<code>sudo systemctl start docker</code>).</p>
+            <pre style="background: var(--code-bg); border-radius: 12px;">cd ~/hadoop_isil</pre>
+          </article>
+        </div>
+        <p class="muted">
+          Cambia la ruta por la carpeta donde tú clonaste el proyecto. Para confirmar que estás en el lugar correcto:
+          en CMD usa <code>dir</code>; en PowerShell, macOS y Ubuntu usa <code>ls</code>. Debes ver
+          <code>docker-compose.week7.yml</code> y <code>ventas_ecommerce_peru.csv</code>.
+        </p>
+      </section>
+
+      <section class="card" id="dataset">
+        <h2>El Dataset: Ventas E-commerce Perú</h2>
+        <p class="section-intro">
+          Cada fila es un <strong>pedido</strong> de una tienda online peruana entre el 2023-01-01 y el 2025-12-31.
+          Los datos son ficticios (generados para el curso) y no tienen tildes ni ñ, para evitar problemas de codificación en la consola de Windows.
+        </p>
+        <div class="mini-grid">
+          <article class="mini-card">
+            <h3>500 000 pedidos</h3>
+            <p>Un pedido por línea. Con el encabezado, el archivo tiene 500001 líneas.</p>
+          </article>
+          <article class="mini-card">
+            <h3>16 columnas</h3>
+            <p>Fechas, montos, cliente, ubicación, producto, pago, entrega y calificación.</p>
+          </article>
+          <article class="mini-card">
+            <h3>3 años completos</h3>
+            <p>2023, 2024 y 2025, con picos por campañas (Día de la Madre, Black Friday, Navidad).</p>
+          </article>
+          <article class="mini-card">
+            <h3>Montos en soles</h3>
+            <p>Todos los importes están en soles (S/).</p>
+          </article>
+        </div>
+
+        <h3 style="margin-top: 24px;">Diccionario de datos</h3>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr><th>Columna</th><th>Tipo en Spark</th><th>Qué contiene</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>id_pedido</code></td><td>INT</td><td>Identificador único del pedido (1000001 a 1500000), en orden cronológico.</td></tr>
+              <tr><td><code>fecha_pedido</code></td><td>DATE</td><td>Fecha del pedido, formato <code>yyyy-MM-dd</code>.</td></tr>
+              <tr><td><code>hora_pedido</code></td><td>INT</td><td>Hora del día en que se hizo el pedido (0 a 23).</td></tr>
+              <tr><td><code>id_cliente</code></td><td>INT</td><td>Identificador del cliente (100001 a 320000). Un cliente puede tener varios pedidos.</td></tr>
+              <tr><td><code>departamento</code></td><td>STRING</td><td>Departamento de entrega: 25 valores (24 departamentos y Callao). Los nombres compuestos usan guion bajo: <code>La_Libertad</code>, <code>San_Martin</code>, <code>Madre_de_Dios</code>.</td></tr>
+              <tr><td><code>categoria</code></td><td>STRING</td><td>Tecnologia, Moda, Hogar, Supermercado, Belleza, Deportes, Juguetes o Libros.</td></tr>
+              <tr><td><code>producto</code></td><td>STRING</td><td>64 productos (8 por categoría). Por ejemplo: Laptop, Smartphone, Zapatillas, Aceite, Perfume.</td></tr>
+              <tr><td><code>precio_unitario</code></td><td>DECIMAL(10,2)</td><td>Precio por unidad antes del descuento, en soles.</td></tr>
+              <tr><td><code>cantidad</code></td><td>INT</td><td>Unidades compradas en el pedido (1 a 6).</td></tr>
+              <tr><td><code>descuento_pct</code></td><td>INT</td><td>Descuento aplicado, en porcentaje: 0, 5, 10, 15, 20, 30 o 40.</td></tr>
+              <tr><td><code>monto_total</code></td><td>DECIMAL(12,2)</td><td>Importe del pedido en soles: <code>cantidad x precio_unitario x (1 - descuento_pct/100)</code>, sin costo de envío.</td></tr>
+              <tr><td><code>metodo_pago</code></td><td>STRING</td><td>Yape, Plin, Credito, Debito, PagoEfectivo o ContraEntrega.</td></tr>
+              <tr><td><code>canal</code></td><td>STRING</td><td>Web, App, Marketplace o WhatsApp.</td></tr>
+              <tr><td><code>estado</code></td><td>STRING</td><td>Entregado, Cancelado o Devuelto.</td></tr>
+              <tr><td><code>dias_entrega</code></td><td>INT</td><td>Días entre el pedido y la entrega (1 a 20). Vacío (<code>NULL</code>) si el pedido fue Cancelado.</td></tr>
+              <tr><td><code>calificacion</code></td><td>INT</td><td>Nota que dio el cliente (1 a 5). Vacía (<code>NULL</code>) si no calificó: ocurre en más del 60 % de los pedidos.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="highlight" style="margin-top: 16px;">
+          <strong>Reglas de negocio (valen para toda la guía y para el trabajo grupal):</strong>
+          <ul class="plain-list">
+            <li><strong>Ingresos</strong> = suma de <code>monto_total</code> solo de los pedidos con <code>estado = 'Entregado'</code>. Un pedido Cancelado no se cobra y uno Devuelto se reembolsa.</li>
+            <li><strong>Ticket promedio</strong> = ingresos entre número de pedidos entregados.</li>
+            <li>Si una pregunta dice "todos los pedidos", cuenta los tres estados.</li>
+          </ul>
+        </div>
+        <div class="warning-box" style="margin-top: 16px;">
+          <strong>Ojo con los vacíos:</strong> en Spark los campos vacíos se leen como <code>NULL</code>.
+          <code>COUNT(*)</code> cuenta todas las filas, pero <code>COUNT(columna)</code>, <code>AVG</code> y <code>SUM</code> ignoran los <code>NULL</code>.
+          Por eso el promedio de <code>calificacion</code> se calcula solo con los pedidos que sí fueron calificados.
+        </div>
+      </section>
+
+      <section class="card" id="hdfs">
+        <h2>Bloque Base: dejar HDFS listo</h2>
+        <p class="section-intro">
+          Este bloque es el mismo de la práctica anterior, ahora con el archivo nuevo. Hasta aquí debes llegar antes de hablar de Spark SQL.
+        </p>
+
+        <div class="step-list">
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">1</div>
+              <div>
+                <h3 class="step__title">Levantar el entorno Hadoop</h3>
+                <p class="muted">Hazlo desde la raíz <code>hadoop_isil</code>.</p>
+              </div>
+            </div>
+            <span class="context-tag">Terminal de tu computadora</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">Comandos</span>
+                <button class="copy-btn" data-copy-target="w10-step1">Copiar</button>
+              </div>
+              <pre id="w10-step1">docker compose -f docker-compose.week7.yml up --build -d
+docker compose -f docker-compose.week7.yml ps</pre>
+            </div>
+            <div class="result-box">
+              <strong>Debes ver:</strong> <code>namenode</code>, <code>datanode</code>, <code>resourcemanager</code>,
+              <code>nodemanager</code> e <code>historyserver</code> levantados.
+            </div>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">2</div>
+              <div>
+                <h3 class="step__title">Subir el dataset a HDFS</h3>
+                <p class="muted">El archivo debe llamarse <code>ventas_ecommerce_peru.csv</code> y estar en la raíz.</p>
+              </div>
+            </div>
+            <span class="context-tag">Terminal de tu computadora</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">Comandos</span>
+                <button class="copy-btn" data-copy-target="w10-step2">Copiar</button>
+              </div>
+              <pre id="w10-step2">docker exec namenode /opt/hadoop-3.2.1/bin/hdfs dfs -mkdir -p /data
+docker exec namenode /opt/hadoop-3.2.1/bin/hdfs dfs -put -f /workshop/ventas_ecommerce_peru.csv /data/
+docker exec namenode /opt/hadoop-3.2.1/bin/hdfs dfs -ls -h /data
+docker exec namenode sh -c "/opt/hadoop-3.2.1/bin/hdfs dfs -head /data/ventas_ecommerce_peru.csv | head -n 5"
+docker exec namenode sh -c "/opt/hadoop-3.2.1/bin/hdfs dfs -cat /data/ventas_ecommerce_peru.csv | wc -l"</pre>
+            </div>
+            <div class="result-box">
+              <strong>Debes ver:</strong> el archivo (unos <code>47.0 M</code>) dentro de <code>/data</code>, las primeras filas
+              del CSV (el encabezado y 4 pedidos) y, al final, el número <code>500001</code>: 500 000 pedidos más la línea del encabezado.
+              Las líneas que dicen <code>INFO</code> son normales. Si hiciste la Semana 9, también verás
+              <code>ai_student_impact_dataset.csv</code> en <code>/data</code>: déjalo, no estorba.
+            </div>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">3</div>
+              <div>
+                <h3 class="step__title">Confirmación mínima para seguir</h3>
+                <p class="muted">Si esto sale bien, ya puedes pasar a Spark SQL.</p>
+              </div>
+            </div>
+            <ul class="plain-list">
+              <li>El clúster está levantado.</li>
+              <li>El archivo aparece en <code>/data</code> con unos <code>47.0 M</code>.</li>
+              <li><code>hdfs dfs -head</code> devuelve filas reales del CSV.</li>
+              <li>El conteo de líneas da <code>500001</code>.</li>
+              <li>Opcional: también lo ves en <code>http://localhost:9870</code> (Utilities, Browse the file system, carpeta <code>/data</code>).</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section class="card" id="spark">
+        <h2>Paso a Paso de Spark SQL</h2>
+        <p class="section-intro">
+          A partir de aquí el objetivo ya no es MapReduce. El objetivo es leer el CSV desde HDFS con Spark y consultar con SQL.
+        </p>
+
+        <div class="step-list">
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">4</div>
+              <div>
+                <h3 class="step__title">Verifica que Hadoop siga levantado</h3>
+                <p class="muted">Haz esta comprobación antes de abrir Spark.</p>
+              </div>
+            </div>
+            <span class="context-tag">Terminal de tu computadora</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">Comando</span>
+                <button class="copy-btn" data-copy-target="w10-step4">Copiar</button>
+              </div>
+              <pre id="w10-step4">docker ps</pre>
+            </div>
+            <div class="result-box">
+              <strong>Debes ver algo como:</strong> <code>namenode</code>, <code>datanode</code>, <code>resourcemanager</code>,
+              <code>nodemanager</code> e <code>historyserver</code>.
+            </div>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">5</div>
+              <div>
+                <h3 class="step__title">Verifica otra vez que el archivo está en HDFS</h3>
+                <p class="muted">Aquí entras a <code>namenode</code> y revisas desde dentro.</p>
+              </div>
+            </div>
+            <span class="context-tag">Terminal de tu computadora</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">Paso A: entrar al contenedor</span>
+                <button class="copy-btn" data-copy-target="w10-step5a">Copiar</button>
+              </div>
+              <pre id="w10-step5a">docker exec -it namenode bash</pre>
+            </div>
+            <p class="muted">El prompt cambia a algo como <code>root@xxxx:/#</code>. Recién ahí pega el paso B.</p>
+            <span class="context-tag">Dentro del contenedor namenode</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">Paso B: revisar HDFS</span>
+                <button class="copy-btn" data-copy-target="w10-step5b">Copiar</button>
+              </div>
+              <pre id="w10-step5b">hdfs dfs -ls -h /data
+hdfs dfs -head /data/ventas_ecommerce_peru.csv</pre>
+            </div>
+            <div class="result-box">
+              <strong>Si aparece el archivo:</strong> ya puedes conectar Spark. Luego sal con <code>exit</code> para volver a tu computadora.
+            </div>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">6</div>
+              <div>
+                <h3 class="step__title">Descarga la imagen de Spark con Python</h3>
+                <p class="muted">También conviene revisar el nombre de la red Docker donde vive Hadoop.</p>
+              </div>
+            </div>
+            <span class="context-tag">Terminal de tu computadora</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">Comandos</span>
+                <button class="copy-btn" data-copy-target="w10-step6">Copiar</button>
+              </div>
+              <pre id="w10-step6">docker pull apache/spark-py:v3.4.0
+docker network ls</pre>
+            </div>
+            <div class="result-box">
+              <strong>Debes identificar:</strong> la red del proyecto. En este repositorio será
+              <code>hadoop_isil_default</code>. La imagen pesa cerca de 1 GB: la primera descarga demora.
+              Funciona en PCs Intel/AMD y en Mac con chip M1/M2/M3/M4. Si ya la descargaste en la Semana 9, este paso es inmediato.
+            </div>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">7</div>
+              <div>
+                <h3 class="step__title">Entra a PySpark dentro de la misma red de Hadoop</h3>
+                <p class="muted">Si la red tiene otro nombre, reemplázala. Es una sola línea: cópiala completa.</p>
+              </div>
+            </div>
+            <span class="context-tag">Terminal de tu computadora</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">Comando</span>
+                <button class="copy-btn" data-copy-target="w10-step7">Copiar</button>
+              </div>
+              <pre id="w10-step7">docker run -it --rm --name spark-sql --network hadoop_isil_default apache/spark-py:v3.4.0 /opt/spark/bin/pyspark</pre>
+            </div>
+            <div class="result-box">
+              <strong>Con esto entras:</strong> a una consola interactiva de PySpark. Verás el logo de Spark
+              (versión <code>3.4.0</code>) y el prompt <code>&gt;&gt;&gt;</code>. Los mensajes <code>WARN</code> son normales.
+            </div>
+            <div class="warning-box" style="margin-top: 12px;">
+              <strong>No salgas de PySpark todavía.</strong> Deja esta ventana abierta con el prompt <code>&gt;&gt;&gt;</code>:
+              todos los bloques marcados como <strong>Dentro de PySpark</strong>
+              (pasos 8 al 16 y las preguntas del trabajo grupal) se pegan aquí, uno detrás de otro, en esta misma consola.
+              <br><br>
+              <strong>¿Cómo sé dónde estoy?</strong>
+              <br>• Si la línea empieza con <code>&gt;&gt;&gt;</code> o <code>...</code> → estás en PySpark. Pega el código Python aquí.
+              <br>• Si ves algo como <code>usuario@equipo carpeta %</code>, <code>$</code>, <code>C:\...&gt;</code> o <code>PS C:\...&gt;</code> → estás en la terminal de tu computadora, <strong>no</strong> en PySpark. Si pegas ahí el código Python verás errores como <code>command not found: from</code>, <code>number expected</code> o <code>"from" no se reconoce como un comando</code>.
+              <br><br>
+              <strong>Si saliste por error</strong> (escribiste <code>exit()</code> o cerraste la ventana): el contenedor de Spark se borra
+              y también todo lo que creaste (<code>spark</code>, <code>df</code>, la vista <code>ventas</code>). Vuelve a ejecutar
+              este paso 7 y repite desde el paso 8 en orden.
+            </div>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">8</div>
+              <div>
+                <h3 class="step__title">Crea la sesión Spark apuntando a HDFS</h3>
+                <p class="muted">Este bloque ya se ejecuta dentro de PySpark.</p>
+              </div>
+            </div>
+            <span class="context-tag">Dentro de PySpark</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">PySpark</span>
+                <button class="copy-btn" data-copy-target="w10-step8">Copiar</button>
+              </div>
+              <pre id="w10-step8">from pyspark.sql import SparkSession
+
+spark = SparkSession.builder \
+    .appName("ISIL_Spark_SQL") \
+    .config("spark.hadoop.fs.defaultFS", "hdfs://namenode:9000") \
+    .getOrCreate()</pre>
+            </div>
+            <div class="result-box">
+              <strong>Nota:</strong> PySpark ya trae una variable <code>spark</code> creada, así que puede aparecer un aviso
+              <code>Using an existing Spark session</code>. Es normal: igual leemos con la ruta completa <code>hdfs://namenode:9000/...</code>.
+            </div>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">9</div>
+              <div>
+                <h3 class="step__title">Lee el CSV desde HDFS con su esquema</h3>
+                <p class="muted">Esta vez defines los tipos de las columnas en lugar de dejarlos todos como texto.</p>
+              </div>
+            </div>
+            <span class="context-tag">Dentro de PySpark</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">PySpark</span>
+                <button class="copy-btn" data-copy-target="w10-step9">Copiar</button>
+              </div>
+              <pre id="w10-step9">esquema = """
+id_pedido INT, fecha_pedido DATE, hora_pedido INT, id_cliente INT,
+departamento STRING, categoria STRING, producto STRING,
+precio_unitario DECIMAL(10,2), cantidad INT, descuento_pct INT,
+monto_total DECIMAL(12,2), metodo_pago STRING, canal STRING,
+estado STRING, dias_entrega INT, calificacion INT
+"""
+
+df = spark.read \
+    .option("header", "true") \
+    .schema(esquema) \
+    .csv("hdfs://namenode:9000/data/ventas_ecommerce_peru.csv")
+
+df.printSchema()
+df.show(10, truncate=False)</pre>
+            </div>
+            <div class="result-box">
+              <strong>Debes ver:</strong> 16 columnas con sus tipos (<code>fecha_pedido</code> como <code>date</code> y
+              <code>monto_total</code> como <code>decimal(12,2)</code>) y luego las primeras 10 filas.
+              Si en <code>dias_entrega</code> o <code>calificacion</code> aparece <code>null</code>, es normal (son los campos vacíos del CSV).
+            </div>
+            <div class="highlight" style="margin-top: 12px;">
+              <strong>¿Por qué cambió respecto a la Semana 9?</strong> Aquí no usamos <code>multiline</code> ni <code>escape</code>:
+              este CSV tiene un pedido por línea y ningún campo con comas o comillas, así que Spark puede repartir la lectura en
+              varias particiones y trabajar en paralelo. Con el esquema definido, las fechas son fechas reales y los montos son
+              decimales exactos: no hace falta usar <code>CAST</code> en cada consulta.
+            </div>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">10</div>
+              <div>
+                <h3 class="step__title">Crea la vista temporal y empieza con SQL</h3>
+                <p class="muted">Desde aquí ya trabajas como Spark SQL.</p>
+              </div>
+            </div>
+            <span class="context-tag">Dentro de PySpark</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">PySpark + SQL</span>
+                <button class="copy-btn" data-copy-target="w10-step10">Copiar</button>
+              </div>
+              <pre id="w10-step10">df.createOrReplaceTempView("ventas")
+
+spark.sql("SELECT * FROM ventas LIMIT 10").show(truncate=False)</pre>
+            </div>
+            <div class="result-box">
+              <strong>Debes ver:</strong> otra vez las primeras filas, pero ahora leídas con SQL desde la vista <code>ventas</code>.
+              Todas las consultas siguientes usan esa vista.
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="card" id="consultas">
+        <h2>Consultas Guiadas con Resultado Esperado</h2>
+        <p class="section-intro">
+          Antes del trabajo grupal, ejecuta estas seis consultas en el mismo orden. Sus resultados son tu punto de control:
+          si tus números coinciden con los de abajo, tu entorno y tu lectura del CSV están bien.
+        </p>
+        <div class="warning-box">
+          <strong>Si algún número no coincide, no avances a las preguntas del trabajo grupal.</strong>
+          Revisa el esquema del paso 9 y que estés filtrando con <code>estado = 'Entregado'</code> donde corresponde.
+        </div>
+        <div class="step-list" style="margin-top: 16px;">
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">11</div>
+              <div>
+                <h3 class="step__title">Radiografía del dataset</h3>
+                <p class="muted">Total de pedidos, clientes distintos y rango de fechas.</p>
+              </div>
+            </div>
+            <span class="context-tag">Dentro de PySpark</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">SQL</span>
+                <button class="copy-btn" data-copy-target="w10-q1">Copiar</button>
+              </div>
+              <pre id="w10-q1">spark.sql("""
+SELECT
+  COUNT(*) AS total_pedidos,
+  COUNT(DISTINCT id_cliente) AS clientes_unicos,
+  MIN(fecha_pedido) AS primera_fecha,
+  MAX(fecha_pedido) AS ultima_fecha
+FROM ventas
+""").show(truncate=False)</pre>
+            </div>
+            <div class="result-box">
+              <strong>Resultado esperado:</strong>
+              <div class="table-wrap">
+                <table class="result-table">
+                  <thead><tr><th class="num">total_pedidos</th><th class="num">clientes_unicos</th><th>primera_fecha</th><th>ultima_fecha</th></tr></thead>
+                  <tbody><tr><td class="num">500000</td><td class="num">174385</td><td>2023-01-01</td><td>2025-12-31</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">12</div>
+              <div>
+                <h3 class="step__title">Pedidos por estado</h3>
+                <p class="muted">Cuántos pedidos se entregaron, se cancelaron o se devolvieron.</p>
+              </div>
+            </div>
+            <span class="context-tag">Dentro de PySpark</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">SQL</span>
+                <button class="copy-btn" data-copy-target="w10-q2">Copiar</button>
+              </div>
+              <pre id="w10-q2">spark.sql("""
+SELECT estado, COUNT(*) AS pedidos
+FROM ventas
+GROUP BY estado
+ORDER BY pedidos DESC
+""").show(truncate=False)</pre>
+            </div>
+            <div class="result-box">
+              <strong>Resultado esperado:</strong>
+              <div class="table-wrap">
+                <table class="result-table">
+                  <thead><tr><th>estado</th><th class="num">pedidos</th></tr></thead>
+                  <tbody>
+                    <tr><td>Entregado</td><td class="num">450260</td></tr>
+                    <tr><td>Cancelado</td><td class="num">26747</td></tr>
+                    <tr><td>Devuelto</td><td class="num">22993</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              Solo los pedidos <code>Entregado</code> cuentan como ingresos en las consultas que siguen.
+            </div>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">13</div>
+              <div>
+                <h3 class="step__title">Ingresos por categoría</h3>
+                <p class="muted">Pedidos, ingresos y ticket promedio de los pedidos entregados.</p>
+              </div>
+            </div>
+            <span class="context-tag">Dentro de PySpark</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">SQL</span>
+                <button class="copy-btn" data-copy-target="w10-q3">Copiar</button>
+              </div>
+              <pre id="w10-q3">spark.sql("""
+SELECT
+  categoria,
+  COUNT(*) AS pedidos,
+  SUM(monto_total) AS ingresos,
+  ROUND(AVG(monto_total), 2) AS ticket_promedio
+FROM ventas
+WHERE estado = 'Entregado'
+GROUP BY categoria
+ORDER BY ingresos DESC
+""").show(truncate=False)</pre>
+            </div>
+            <div class="result-box">
+              <strong>Resultado esperado:</strong>
+              <div class="table-wrap">
+                <table class="result-table">
+                  <thead><tr><th>categoria</th><th class="num">pedidos</th><th class="num">ingresos</th><th class="num">ticket_promedio</th></tr></thead>
+                  <tbody>
+                    <tr><td>Tecnologia</td><td class="num">90391</td><td class="num">156960222.13</td><td class="num">1736.46</td></tr>
+                    <tr><td>Hogar</td><td class="num">63736</td><td class="num">84021623.57</td><td class="num">1318.28</td></tr>
+                    <tr><td>Moda</td><td class="num">77896</td><td class="num">26122766.55</td><td class="num">335.35</td></tr>
+                    <tr><td>Juguetes</td><td class="num">32786</td><td class="num">16338924.31</td><td class="num">498.35</td></tr>
+                    <tr><td>Deportes</td><td class="num">33040</td><td class="num">14535664.06</td><td class="num">439.94</td></tr>
+                    <tr><td>Belleza</td><td class="num">45339</td><td class="num">12220642.17</td><td class="num">269.54</td></tr>
+                    <tr><td>Supermercado</td><td class="num">83124</td><td class="num">11347109.77</td><td class="num">136.51</td></tr>
+                    <tr><td>Libros</td><td class="num">23948</td><td class="num">2600991.15</td><td class="num">108.61</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              Fíjate: Supermercado y Moda tienen más pedidos que Hogar, pero ingresos mucho menores. La diferencia está en el ticket promedio.
+            </div>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">14</div>
+              <div>
+                <h3 class="step__title">Ingresos por año</h3>
+                <p class="muted">Primer uso de una función de fecha: <code>YEAR()</code>.</p>
+              </div>
+            </div>
+            <span class="context-tag">Dentro de PySpark</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">SQL</span>
+                <button class="copy-btn" data-copy-target="w10-q4">Copiar</button>
+              </div>
+              <pre id="w10-q4">spark.sql("""
+SELECT
+  YEAR(fecha_pedido) AS anio,
+  COUNT(*) AS pedidos,
+  SUM(monto_total) AS ingresos
+FROM ventas
+WHERE estado = 'Entregado'
+GROUP BY YEAR(fecha_pedido)
+ORDER BY anio
+""").show(truncate=False)</pre>
+            </div>
+            <div class="result-box">
+              <strong>Resultado esperado:</strong>
+              <div class="table-wrap">
+                <table class="result-table">
+                  <thead><tr><th class="num">anio</th><th class="num">pedidos</th><th class="num">ingresos</th></tr></thead>
+                  <tbody>
+                    <tr><td class="num">2023</td><td class="num">116605</td><td class="num">81132483.42</td></tr>
+                    <tr><td class="num">2024</td><td class="num">148561</td><td class="num">106450506.31</td></tr>
+                    <tr><td class="num">2025</td><td class="num">185094</td><td class="num">136564953.98</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">15</div>
+              <div>
+                <h3 class="step__title">Top 5 departamentos por ingresos</h3>
+                <p class="muted">Dónde se concentra la venta.</p>
+              </div>
+            </div>
+            <span class="context-tag">Dentro de PySpark</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">SQL</span>
+                <button class="copy-btn" data-copy-target="w10-q5">Copiar</button>
+              </div>
+              <pre id="w10-q5">spark.sql("""
+SELECT
+  departamento,
+  COUNT(*) AS pedidos,
+  SUM(monto_total) AS ingresos
+FROM ventas
+WHERE estado = 'Entregado'
+GROUP BY departamento
+ORDER BY ingresos DESC
+LIMIT 5
+""").show(truncate=False)</pre>
+            </div>
+            <div class="result-box">
+              <strong>Resultado esperado:</strong>
+              <div class="table-wrap">
+                <table class="result-table">
+                  <thead><tr><th>departamento</th><th class="num">pedidos</th><th class="num">ingresos</th></tr></thead>
+                  <tbody>
+                    <tr><td>Lima</td><td class="num">215449</td><td class="num">154576660.06</td></tr>
+                    <tr><td>Arequipa</td><td class="num">29009</td><td class="num">21081974.14</td></tr>
+                    <tr><td>La_Libertad</td><td class="num">24488</td><td class="num">17893111.53</td></tr>
+                    <tr><td>Callao</td><td class="num">22029</td><td class="num">16019142.93</td></tr>
+                    <tr><td>Piura</td><td class="num">20129</td><td class="num">14414766.27</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              Lima concentra casi la mitad de los ingresos de todo el país.
+            </div>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">16</div>
+              <div>
+                <h3 class="step__title">Guarda un resultado de vuelta en HDFS</h3>
+                <p class="muted">Spark no solo lee de HDFS: también escribe. Guardamos el resultado del paso 13 como CSV.</p>
+              </div>
+            </div>
+            <span class="context-tag">Dentro de PySpark</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">PySpark</span>
+                <button class="copy-btn" data-copy-target="w10-step16">Copiar</button>
+              </div>
+              <pre id="w10-step16">resultado = spark.sql("""
+SELECT
+  categoria,
+  COUNT(*) AS pedidos,
+  SUM(monto_total) AS ingresos,
+  ROUND(AVG(monto_total), 2) AS ticket_promedio
+FROM ventas
+WHERE estado = 'Entregado'
+GROUP BY categoria
+ORDER BY ingresos DESC
+""")
+
+resultado.coalesce(1).write \
+    .mode("overwrite") \
+    .option("header", "true") \
+    .csv("hdfs://namenode:9000/output/ingresos_por_categoria")
+
+spark.read.option("header", "true").csv("hdfs://namenode:9000/output/ingresos_por_categoria").show(truncate=False)</pre>
+            </div>
+            <div class="result-box">
+              <strong>Debes ver:</strong> la misma tabla del paso 13, pero leída desde la carpeta nueva
+              <code>/output/ingresos_por_categoria</code> de HDFS. <code>coalesce(1)</code> junta el resultado (solo 8 filas)
+              en un único archivo; <code>mode("overwrite")</code> permite repetir el paso sin error.
+              Spark crea una <strong>carpeta</strong> con un archivo <code>part-...csv</code> dentro y un archivo vacío <code>_SUCCESS</code>.
+              Lo verificarás desde la terminal de tu computadora en el paso 17.
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="card" id="grupal">
+        <h2>Trabajo Grupal: Preguntas de Negocio</h2>
+        <p class="section-intro">
+          Ahora la tienda online te necesita como analista. Responde las preguntas siguientes con Spark SQL sobre la vista
+          <code>ventas</code>. Aquí <strong>no hay resultado esperado</strong>: lo importante es que escribas la consulta, la expliques
+          y interpretes lo que encuentras.
+        </p>
+        <div class="highlight">
+          <strong>Antes de repartir las preguntas:</strong> cada integrante debe haber llegado al paso 16 en su propia PC.
+          Usen siempre las reglas de negocio de la sección <a href="#dataset">El dataset</a> (los ingresos solo cuentan pedidos
+          <code>Entregado</code>). Guarden cada consulta en un archivo de texto mientras trabajan: al salir de PySpark nada se conserva.
+        </div>
+
+        <div class="step-list" style="margin-top: 16px;">
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">P1</div>
+              <div>
+                <h3 class="step__title">Ventas mes a mes de 2025</h3>
+                <p class="muted">¿Cómo se comportaron las ventas durante 2025?</p>
+              </div>
+            </div>
+            <div class="tag-row"><span class="context-tag">Nivel: básico</span><span class="context-tag">Dentro de PySpark</span></div>
+            <ul class="plain-list">
+              <li><strong>Debes mostrar:</strong> una fila por mes con los pedidos entregados, los ingresos y el ticket promedio. Indica qué mes vendió más y propón una razón de negocio.</li>
+              <li><strong>Pista:</strong> <code>WHERE</code> con <code>YEAR(fecha_pedido) = 2025</code>, <code>date_format(fecha_pedido, 'yyyy-MM')</code>, <code>GROUP BY</code> y <code>ORDER BY</code>.</li>
+            </ul>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">P2</div>
+              <div>
+                <h3 class="step__title">Top 10 productos</h3>
+                <p class="muted">¿Qué productos dejan más dinero?</p>
+              </div>
+            </div>
+            <div class="tag-row"><span class="context-tag">Nivel: básico</span><span class="context-tag">Dentro de PySpark</span></div>
+            <ul class="plain-list">
+              <li><strong>Debes mostrar:</strong> los 10 productos con más ingresos de todo el periodo, con su categoría y las unidades vendidas. Comenta si el producto que más ingresos deja es también el que más unidades vende.</li>
+              <li><strong>Pista:</strong> <code>GROUP BY producto, categoria</code>, <code>SUM(cantidad)</code>, <code>SUM(monto_total)</code> y <code>ORDER BY ... DESC LIMIT 10</code>.</li>
+            </ul>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">P3</div>
+              <div>
+                <h3 class="step__title">Devoluciones y cancelaciones por categoría</h3>
+                <p class="muted">¿Qué categorías tienen más problemas posventa?</p>
+              </div>
+            </div>
+            <div class="tag-row"><span class="context-tag">Nivel: intermedio</span><span class="context-tag">Dentro de PySpark</span></div>
+            <ul class="plain-list">
+              <li><strong>Debes mostrar:</strong> por categoría, el total de pedidos (todos los estados), el porcentaje de pedidos Devueltos y el porcentaje de Cancelados, ordenado por porcentaje de devoluciones. Explica qué categoría preocupa más.</li>
+              <li><strong>Pista:</strong> <code>CASE WHEN estado = 'Devuelto' THEN 1 ELSE 0 END</code> dentro de <code>AVG</code> o <code>SUM</code>, y <code>ROUND</code>.</li>
+            </ul>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">P4</div>
+              <div>
+                <h3 class="step__title">Logística por departamento</h3>
+                <p class="muted">¿A qué zonas del país se demora más la entrega?</p>
+              </div>
+            </div>
+            <div class="tag-row"><span class="context-tag">Nivel: intermedio</span><span class="context-tag">Dentro de PySpark</span></div>
+            <ul class="plain-list">
+              <li><strong>Debes mostrar:</strong> los 5 departamentos con mayor promedio de días de entrega, considerando solo los que tienen al menos 5 000 pedidos (contando todos los estados), junto con su calificación promedio. Comenta si tardar más baja la calificación.</li>
+              <li><strong>Pista:</strong> <code>HAVING COUNT(*) &gt;= 5000</code>. Recuerda que <code>AVG</code> ignora los <code>NULL</code> de <code>dias_entrega</code> y de <code>calificacion</code>.</li>
+            </ul>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">P5</div>
+              <div>
+                <h3 class="step__title">Medios de pago por año</h3>
+                <p class="muted">¿Cómo cambió la forma de pagar entre 2023 y 2025?</p>
+              </div>
+            </div>
+            <div class="tag-row"><span class="context-tag">Nivel: intermedio</span><span class="context-tag">Dentro de PySpark</span></div>
+            <ul class="plain-list">
+              <li><strong>Debes mostrar:</strong> para cada año, el porcentaje de pedidos que usa cada método de pago (los porcentajes de un año suman 100). Calcula cuánto cambió la participación combinada de Yape y Plin entre 2023 y 2025.</li>
+              <li><strong>Pista:</strong> función de ventana <code>SUM(COUNT(*)) OVER (PARTITION BY YEAR(fecha_pedido))</code>, o dos consultas.</li>
+            </ul>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">P6</div>
+              <div>
+                <h3 class="step__title">Crecimiento por categoría</h3>
+                <p class="muted">¿Qué categorías crecen más rápido?</p>
+              </div>
+            </div>
+            <div class="tag-row"><span class="context-tag">Nivel: avanzado</span><span class="context-tag">Dentro de PySpark</span></div>
+            <ul class="plain-list">
+              <li><strong>Debes mostrar:</strong> por categoría, los ingresos de 2023, 2024 y 2025 y el crecimiento porcentual de 2025 frente a 2024, de mayor a menor. Indica cuál crece más rápido y cuál se estanca.</li>
+              <li><strong>Pista:</strong> una CTE con <code>WITH</code> que calcule ingresos por categoría y año; luego <code>SUM(CASE WHEN anio = 2024 THEN ingresos END)</code> o <code>LAG(...) OVER (PARTITION BY categoria ORDER BY anio)</code>.</li>
+            </ul>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">P7</div>
+              <div>
+                <h3 class="step__title">Productos estrella de cada categoría</h3>
+                <p class="muted">¿Cuáles son los 3 productos que más venden dentro de cada categoría?</p>
+              </div>
+            </div>
+            <div class="tag-row"><span class="context-tag">Nivel: avanzado</span><span class="context-tag">Dentro de PySpark</span></div>
+            <ul class="plain-list">
+              <li><strong>Debes mostrar:</strong> los 3 productos con más ingresos de cada categoría (24 filas en total), con su puesto dentro de la categoría.</li>
+              <li><strong>Pista:</strong> <code>RANK()</code> o <code>ROW_NUMBER()</code> con <code>OVER (PARTITION BY categoria ORDER BY ingresos DESC)</code> dentro de una CTE o subconsulta, y luego filtrar los puestos 1 a 3.</li>
+            </ul>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">P8</div>
+              <div>
+                <h3 class="step__title">Clientes fieles</h3>
+                <p class="muted">¿Qué tan fieles son los clientes y quiénes gastan más?</p>
+              </div>
+            </div>
+            <div class="tag-row"><span class="context-tag">Nivel: avanzado</span><span class="context-tag">Dentro de PySpark</span></div>
+            <ul class="plain-list">
+              <li><strong>Debes mostrar:</strong> (a) entre los clientes con al menos un pedido entregado, cuántos hicieron 2 o más pedidos entregados y qué porcentaje es (tasa de recompra); (b) los 10 clientes que más gastaron, con su número de pedidos entregados y su gasto total.</li>
+              <li><strong>Pista:</strong> una CTE con <code>GROUP BY id_cliente</code> y luego <code>CASE WHEN pedidos &gt;= 2 THEN 1 ELSE 0 END</code>.</li>
+            </ul>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">R</div>
+              <div>
+                <h3 class="step__title">Reto Hadoop: CSV frente a Parquet</h3>
+                <p class="muted">¿Cómo cambia el almacenamiento en HDFS según el formato?</p>
+              </div>
+            </div>
+            <div class="tag-row"><span class="context-tag">Nivel: reto</span><span class="context-tag">PySpark + terminal de tu computadora</span></div>
+            <ul class="plain-list">
+              <li><strong>Debes hacer:</strong> guardar todo el DataFrame <code>df</code> en formato Parquet dentro de HDFS, en <code>/data/ventas_parquet</code>; leerlo de vuelta con <code>spark.read.parquet(...)</code> y comprobar que sigue teniendo 500000 filas; y comparar en HDFS el tamaño del CSV frente al del Parquet. Explica con tus palabras por qué son distintos.</li>
+              <li><strong>Pista:</strong> <code>df.write.mode("overwrite").parquet("hdfs://namenode:9000/data/ventas_parquet")</code>. Para ver los tamaños abre una <strong>segunda</strong> terminal de tu computadora (sin cerrar PySpark) y ejecuta <code>docker exec namenode /opt/hadoop-3.2.1/bin/hdfs dfs -du -h /data</code>. La primera columna es el tamaño real; la segunda es el espacio contando las réplicas.</li>
+            </ul>
+          </article>
+
+          <article class="step">
+            <div class="step__head">
+              <div class="step__number">17</div>
+              <div>
+                <h3 class="step__title">Cierre: sal de PySpark y verifica en HDFS</h3>
+                <p class="muted">Hazlo solo cuando termines todas las preguntas.</p>
+              </div>
+            </div>
+            <span class="context-tag">Dentro de PySpark</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">Salir de PySpark</span>
+                <button class="copy-btn" data-copy-target="w10-step17a">Copiar</button>
+              </div>
+              <pre id="w10-step17a">exit()</pre>
+            </div>
+            <div class="warning-box" style="margin-top: 12px;">
+              <strong>Recién ahora puedes salir.</strong> Volverás a la terminal de tu computadora y el contenedor de Spark se borrará solo.
+              Lo que guardaste en HDFS en el paso 16 sigue ahí, porque vive en el clúster Hadoop y no en el contenedor de Spark.
+            </div>
+            <span class="context-tag" style="margin-top: 12px;">Terminal de tu computadora</span>
+            <div class="code-block">
+              <div class="code-block__bar">
+                <span class="code-label">Verificar la salida en HDFS</span>
+                <button class="copy-btn" data-copy-target="w10-step17b">Copiar</button>
+              </div>
+              <pre id="w10-step17b">docker exec namenode /opt/hadoop-3.2.1/bin/hdfs dfs -ls -h /output/ingresos_por_categoria
+docker exec namenode sh -c "/opt/hadoop-3.2.1/bin/hdfs dfs -cat /output/ingresos_por_categoria/part-*"</pre>
+            </div>
+            <div class="result-box">
+              <strong>Debes ver:</strong> la carpeta con <code>_SUCCESS</code> y un archivo <code>part-...csv</code>, y luego su
+              contenido: el encabezado <code>categoria,pedidos,ingresos,ticket_promedio</code> y 8 filas, empezando por
+              <code>Tecnologia,90391,156960222.13,1736.46</code>.
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="card" id="entrega">
+        <h2>Qué Debe Incluir la Entrega del Grupo</h2>
+        <p class="section-intro">
+          Resumen de lo que tu grupo debe poder mostrar. El formato, la fecha límite y la ponderación los define el docente.
+        </p>
+        <ul class="plain-list">
+          <li><strong>Integrantes del grupo</strong> y la división del trabajo.</li>
+          <li><strong>Evidencia de HDFS:</strong> captura del listado de <code>/data</code> con el archivo y del conteo <code>500001</code> (pasos 2 y 3).</li>
+          <li><strong>Evidencia de Spark:</strong> captura de los resultados de las consultas guiadas (pasos 11 al 15) coincidiendo con lo esperado.</li>
+          <li><strong>Preguntas P1 a P8:</strong> por cada una, la consulta SQL completa, la tabla de resultado y 2 o 3 líneas de interpretación en lenguaje de negocio.</li>
+          <li><strong>Reto:</strong> las capturas del tamaño del CSV y del Parquet en HDFS, y tu explicación.</li>
+          <li><strong>Salida en HDFS:</strong> captura del paso 17 con la carpeta <code>/output/ingresos_por_categoria</code>.</li>
+        </ul>
+        <div class="highlight" style="margin-top: 16px;">
+          <strong>Recuerda:</strong> aunque se repartan las preguntas, todos los integrantes deben poder explicar cualquier consulta del grupo.
+        </div>
+      </section>
+
+      <section class="card" id="errores">
+        <h2>Errores Comunes</h2>
+        <p class="section-intro">
+          Antes de asumir que Spark está mal, revisa primero estas causas frecuentes.
+        </p>
+        <div class="mini-grid">
+          <article class="mini-card">
+            <h3>No aparece el archivo en HDFS</h3>
+            <p>No sigas con Spark. Primero vuelve al bloque de carga en <code>/data</code> (paso 2).</p>
+          </article>
+          <article class="mini-card">
+            <h3>put: ... No such file or directory</h3>
+            <p>El comando del paso 2 no encuentra <code>/workshop/ventas_ecommerce_peru.csv</code>: el CSV no está en la raíz de <code>hadoop_isil</code>. Ejecuta <code>git pull</code>, confirma con <code>ls</code> (o <code>dir</code> en CMD) que el archivo existe y repite el paso 2.</p>
+          </article>
+          <article class="mini-card">
+            <h3>La red Docker no coincide</h3>
+            <p>Revisa <code>docker network ls</code> y usa el nombre real en <code>docker run</code>.</p>
+          </article>
+          <article class="mini-card">
+            <h3>Spark no encuentra namenode</h3>
+            <p>Casi siempre significa que el contenedor de Spark no entró a la misma red que Hadoop.</p>
+          </article>
+          <article class="mini-card">
+            <h3>[PATH_NOT_FOUND] Path does not exist: hdfs://namenode:9000/data/...</h3>
+            <p>El archivo no está en HDFS o el nombre está mal escrito. Revisa el paso 2 y que la ruta sea exactamente <code>/data/ventas_ecommerce_peru.csv</code>.</p>
+          </article>
+          <article class="mini-card">
+            <h3>El total sale 500001 y hay una fila con null</h3>
+            <p>Se te olvidó <code>.option("header", "true")</code> en el paso 9: Spark tomó el encabezado como si fuera un pedido. Repite los pasos 9 y 10 copiando el bloque completo.</p>
+          </article>
+          <article class="mini-card">
+            <h3>Mis números no coinciden con el resultado esperado</h3>
+            <p>Revisa que usaste el esquema completo del paso 9 y que filtras con <code>estado = 'Entregado'</code> (con mayúscula inicial y comillas simples) en las consultas de ingresos.</p>
+          </article>
+          <article class="mini-card">
+            <h3>[TABLE_OR_VIEW_NOT_FOUND] ... ventas</h3>
+            <p>No creaste la vista (paso 10) o saliste de PySpark y entraste de nuevo. Repite los pasos 8, 9 y 10.</p>
+          </article>
+          <article class="mini-card">
+            <h3>Windows: el comando se corta o da error raro</h3>
+            <p>Copia el comando completo con el botón <strong>Copiar</strong>. No uses <code>\</code> al final de línea ni comillas simples <code>'...'</code> en CMD: esta guía ya evita ambos.</p>
+          </article>
+          <article class="mini-card">
+            <h3>Ubuntu: permission denied ... docker.sock</h3>
+            <p>Antepón <code>sudo</code> a los comandos <code>docker</code>, o ejecuta una vez <code>sudo usermod -aG docker $USER</code> y vuelve a iniciar sesión.</p>
+          </article>
+          <article class="mini-card">
+            <h3>Conflict: container name already in use</h3>
+            <p>Tienes levantado el stack de <code>docker-hadoop</code> (Semana 5-6). Apágalo desde esa carpeta con <code>docker compose down</code> y vuelve al paso 1.</p>
+          </article>
+          <article class="mini-card">
+            <h3>command not found: from / number expected</h3>
+            <p>Pegaste código Python en la terminal de tu computadora, no en PySpark (pasa si escribiste <code>exit()</code> antes de tiempo). Vuelve al paso 7, espera el prompt <code>&gt;&gt;&gt;</code> y repite desde el paso 8.</p>
+          </article>
+          <article class="mini-card">
+            <h3>NameError: name 'df' is not defined</h3>
+            <p>Saliste de PySpark y entraste de nuevo: las variables se pierden al salir. Repite los pasos 8, 9 y 10 (este último crea la vista <code>ventas</code>) antes de las consultas.</p>
+          </article>
+          <article class="mini-card">
+            <h3>Todo va lento o un contenedor se cierra solo</h3>
+            <p>Docker se quedó sin memoria. En Docker Desktop sube la RAM a 6 GB o más (Settings, Resources), cierra otras aplicaciones pesadas y repite desde el paso 1.</p>
+          </article>
+          <article class="mini-card">
+            <h3>Cannot connect to the Docker daemon</h3>
+            <p>Docker no está encendido. En Windows/macOS abre Docker Desktop y espera a que diga <em>running</em>; en Ubuntu usa <code>sudo systemctl start docker</code>.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Idea Principal de Semana 10</h2>
+        <p class="section-intro">
+          Hadoop guarda el dataset, Spark lo consulta con SQL y los resultados vuelven a Hadoop. Ese ciclo completo es lo que practica el trabajo grupal.
+        </p>
+        <div class="highlight">
+          <strong>Resumen:</strong> HDFS es el almacenamiento distribuido y Spark SQL es la capa de consulta sobre
+          <code>ventas_ecommerce_peru.csv</code>, con 500 000 pedidos que tu grupo debe convertir en respuestas de negocio.
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    Semana 10 - Trabajo grupal: Hadoop + Spark SQL leyendo y escribiendo datos en HDFS.
+  </footer>
+
+  <script>
+    const copyButtons = document.querySelectorAll(".copy-btn");
+
+    copyButtons.forEach((button) => {
+      button.addEventListener("click", async () => {
+        const targetId = button.getAttribute("data-copy-target");
+        const codeElement = document.getElementById(targetId);
+
+        if (!codeElement) {
+          return;
+        }
+
+        try {
+          await navigator.clipboard.writeText(codeElement.innerText.trim());
+          const previousLabel = button.textContent;
+          button.textContent = "Copiado";
+          setTimeout(() => {
+            button.textContent = previousLabel;
+          }, 1400);
+        } catch (error) {
+          button.textContent = "No se pudo copiar";
+          setTimeout(() => {
+            button.textContent = "Copiar";
+          }, 1800);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
